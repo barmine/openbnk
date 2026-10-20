@@ -12,6 +12,7 @@ import { Watcher } from "../../filesystem/watcher.js"
 import { InstructionDiscovery } from "../../instruction-discovery.js"
 import { Instructions } from "../../instructions/index.js"
 import { Location } from "../../location.js"
+import { LearningStore } from "@openbnk/util/learning-store"
 
 type Loaded =
   | { readonly type: "available"; readonly files: InstructionDiscovery.File[] }
@@ -39,6 +40,8 @@ export const Plugin = define({
       const project = discovery.project && FSUtil.contains(root, start)
       const stop = FSUtil.contains(home, start) ? home : root
       const globalFile = yield* fs.resolve(join(global.config, "AGENTS.md"))
+      // Self-learning memory is loaded with the global instructions so every session starts with it.
+      const memoryFiles = (["user", "notes"] as const).map((target) => LearningStore.memoryFile(global.config, target))
       const loaded: { current: Loaded } = { current: { type: "available", files: [] } }
       const configured: { sources: string[]; remote: Map<string, InstructionDiscovery.File> } = {
         sources: [],
@@ -49,7 +52,7 @@ export const Plugin = define({
       // The ancestor walk can reach the global file when the location sits
       // beneath the global config dir; global: false excludes it there too.
       const candidates = [
-        ...(discovery.global ? [globalFile] : []),
+        ...(discovery.global ? [globalFile, ...memoryFiles] : []),
         ...(project
           ? ancestorDirectories(start, stop)
               .map((directory) => join(directory, "AGENTS.md"))
@@ -76,9 +79,12 @@ export const Plugin = define({
       })
 
       const globalSource = Effect.fn("ConfigInstructionPlugin.globalSource")(function* () {
-        if (!discovery.global || !(yield* fs.isFile(globalFile))) return []
-        const file = yield* read(globalFile)
-        return file instanceof InstructionDiscovery.File ? [file] : []
+        if (!discovery.global) return []
+        const memory = LearningStore.enabled(global.config) ? memoryFiles : []
+        const files = yield* Effect.forEach([globalFile, ...memory], (file) =>
+          fs.isFile(file).pipe(Effect.flatMap((exists) => (exists ? read(file) : Effect.succeed(undefined)))),
+        )
+        return files.filter((file) => file instanceof InstructionDiscovery.File)
       })
 
       const projectSource = Effect.fn("ConfigInstructionPlugin.projectSource")(function* () {

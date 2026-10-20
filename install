@@ -1,467 +1,93 @@
 #!/usr/bin/env bash
+# openbnk installer: clones (or updates) the source, builds a native binary, and puts it on your PATH.
+#
+#   bash <(gh api repos/christ-pher/openbnk/contents/install -H "Accept: application/vnd.github.raw")
+#   ./install                      # from an existing checkout
+#
+# Re-run it any time to update. Environment overrides:
+#   OPENBNK_REPO     git URL or owner/name to clone      (default: christ-pher/openbnk)
+#   OPENBNK_SRC      where the source checkout lives     (default: ~/.local/share/openbnk/src)
+#   OPENBNK_BIN_DIR  where the binary is installed       (default: ~/.local/bin)
+#   OPENBNK_BRANCH   branch to build                     (default: main)
 set -euo pipefail
-APP=openbnk
-SOURCE_APP=openbnk
 
-MUTED='\033[0;2m'
-RED='\033[0;31m'
-ORANGE='\033[38;5;214m'
-NC='\033[0m' # No Color
+REPO=${OPENBNK_REPO:-christ-pher/openbnk}
+SRC=${OPENBNK_SRC:-$HOME/.local/share/openbnk/src}
+BIN_DIR=${OPENBNK_BIN_DIR:-$HOME/.local/bin}
+BRANCH=${OPENBNK_BRANCH:-main}
+BUN_VERSION=1.4.2
 
-usage() {
-    cat <<EOF
-OpenBnk Installer
+say() { printf '\033[38;5;214m==>\033[0m %s\n' "$*"; }
+die() { printf '\033[0;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
 
-Usage: install.sh [options]
+case "$(uname -s)" in
+  Linux | Darwin) ;;
+  *) die "unsupported OS: $(uname -s) (Linux and macOS only)" ;;
+esac
+for tool in git curl unzip; do command -v "$tool" >/dev/null || die "missing required tool: $tool"; done
 
-Options:
-    -h, --help              Display this help message
-    -v, --version <version> Install a specific version (e.g., 0.0.0-beta-17236)
-    -b, --binary <path>     Install from a local binary instead of downloading
-        --no-modify-path    Don't modify shell config files (.zshrc, .bashrc, etc.)
-
-Examples:
-    curl -fsSL https://openbnk.local/v2/install | bash
-    curl -fsSL https://openbnk.local/v2/install | bash -s -- --version 0.0.0-beta-17236
-    ./install --binary /path/to/openbnk
-EOF
-}
-
-requested_version=${VERSION:-}
-no_modify_path=false
-binary_path=""
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -h|--help)
-            usage
-            exit 0
-            ;;
-        -v|--version)
-            if [[ -n "${2:-}" ]]; then
-                requested_version="$2"
-                shift 2
-            else
-                echo -e "${RED}Error: --version requires a version argument${NC}"
-                exit 1
-            fi
-            ;;
-        -b|--binary)
-            if [[ -n "${2:-}" ]]; then
-                binary_path="$2"
-                shift 2
-            else
-                echo -e "${RED}Error: --binary requires a path argument${NC}"
-                exit 1
-            fi
-            ;;
-        --no-modify-path)
-            no_modify_path=true
-            shift
-            ;;
-        *)
-            echo -e "${ORANGE}Warning: Unknown option '$1'${NC}" >&2
-            shift
-            ;;
-    esac
-done
-
-INSTALL_DIR=$HOME/.openbnk/bin
-mkdir -p "$INSTALL_DIR"
-
-# If --binary is provided, skip all download/detection logic
-if [ -n "$binary_path" ]; then
-    if [ ! -f "$binary_path" ]; then
-        echo -e "${RED}Error: Binary not found at ${binary_path}${NC}"
-        exit 1
-    fi
-    specific_version="local"
-else
-    raw_os=$(uname -s)
-    os=$(echo "$raw_os" | tr '[:upper:]' '[:lower:]')
-    case "$raw_os" in
-      Darwin*) os="darwin" ;;
-      Linux*) os="linux" ;;
-      MINGW*|MSYS*|CYGWIN*) os="windows" ;;
-    esac
-
-    arch=$(uname -m)
-    if [[ "$arch" == "aarch64" ]]; then
-      arch="arm64"
-    fi
-    if [[ "$arch" == "x86_64" ]]; then
-      arch="x64"
-    fi
-
-    if [ "$os" = "darwin" ] && [ "$arch" = "x64" ]; then
-      rosetta_flag=$(sysctl -n sysctl.proc_translated 2>/dev/null || echo 0)
-      if [ "$rosetta_flag" = "1" ]; then
-        arch="arm64"
-      fi
-    fi
-
-    # Git Bash and MSYS2 run as emulated x64 on Windows ARM64, so `uname -m` reports x86_64.
-    # The host CPU still shows in the `uname -s` suffix and in PROCESSOR_IDENTIFIER.
-    if [ "$os" = "windows" ] && [ "$arch" = "x64" ]; then
-      if [[ "$raw_os" == *-ARM64 || "${PROCESSOR_IDENTIFIER:-}" == ARM* ]]; then
-        arch="arm64"
-      fi
-    fi
-
-    combo="$os-$arch"
-    case "$combo" in
-      linux-x64|linux-arm64|darwin-x64|darwin-arm64|windows-x64|windows-arm64)
-        ;;
-      *)
-        echo -e "${RED}Unsupported OS/Arch: $os/$arch${NC}"
-        exit 1
-        ;;
-    esac
-
-    is_musl=false
-    if [ "$os" = "linux" ]; then
-      if [ -f /etc/alpine-release ]; then
-        is_musl=true
-      fi
-
-      if command -v ldd >/dev/null 2>&1; then
-        if ldd --version 2>&1 | grep -qi musl; then
-          is_musl=true
-        fi
-      fi
-    fi
-
-    needs_baseline=false
-    if [ "$arch" = "x64" ]; then
-      if [ "$os" = "linux" ]; then
-        if ! grep -qwi avx2 /proc/cpuinfo 2>/dev/null; then
-          needs_baseline=true
-        fi
-      fi
-
-      if [ "$os" = "darwin" ]; then
-        avx2=$(sysctl -n hw.optional.avx2_0 2>/dev/null || echo 0)
-        if [ "$avx2" != "1" ]; then
-          needs_baseline=true
-        fi
-      fi
-
-      if [ "$os" = "windows" ]; then
-        ps="(Add-Type -MemberDefinition \"[DllImport(\"\"kernel32.dll\"\")] public static extern bool IsProcessorFeaturePresent(int ProcessorFeature);\" -Name Kernel32 -Namespace Win32 -PassThru)::IsProcessorFeaturePresent(40)"
-        out=""
-        if command -v powershell.exe >/dev/null 2>&1; then
-          out=$(powershell.exe -NoProfile -NonInteractive -Command "$ps" 2>/dev/null || true)
-        elif command -v pwsh >/dev/null 2>&1; then
-          out=$(pwsh -NoProfile -NonInteractive -Command "$ps" 2>/dev/null || true)
-        fi
-        out=$(echo "$out" | tr -d '\r' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
-        if [ "$out" != "true" ] && [ "$out" != "1" ]; then
-          needs_baseline=true
-        fi
-      fi
-    fi
-
-    target="$os-$arch"
-    if [ "$needs_baseline" = "true" ]; then
-      target="$target-baseline"
-    fi
-    if [ "$is_musl" = "true" ]; then
-      target="$target-musl"
-    fi
-
-    if ! command -v tar >/dev/null 2>&1; then
-        echo -e "${RED}Error: 'tar' is required but not installed.${NC}"
-        exit 1
-    fi
-
-    package_scope="@openbnk"
-    if [ -z "$requested_version" ]; then
-        metadata=$(curl -fsSL https://openbnk.local/update/api/latest/cli/npm || true)
-        specific_version=$(echo "$metadata" | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')
-        package=$(echo "$metadata" | sed -n 's/.*"package":"\([^"]*\)".*/\1/p')
-
-        if [ -z "$specific_version" ] || [ -z "$package" ]; then
-            echo -e "${RED}Failed to fetch version information${NC}"
-            exit 1
-        fi
-        package_scope="${package%/cli}"
-    else
-        # Strip leading 'v' if present
-        requested_version="${requested_version#v}"
-        specific_version=$requested_version
-    fi
-
-    package_name="$package_scope/cli-$target"
-    http_status=$(curl -s -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/$package_scope%2fcli-$target/$specific_version" || true)
-    # Older clients install the minimum release before they can migrate package names.
-    if [ "$http_status" = "404" ] && [ -n "$requested_version" ]; then
-        package_name="@opencode-ai/cli-$target"
-        http_status=$(curl -s -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/@openbnk-ai%2fcli-$target/$specific_version" || true)
-    fi
-    if [ "$http_status" = "404" ]; then
-        echo -e "${RED}Error: Version ${specific_version} is not available for $target${NC}"
-        echo -e "${MUTED}Available versions: https://www.npmjs.com/package/$package_name?activeTab=versions${NC}"
-        exit 1
-    fi
-    if [ "$http_status" != "200" ]; then
-        echo -e "${RED}Failed to fetch package information${NC}"
-        exit 1
-    fi
-
-    filename="cli-$target-$specific_version.tgz"
-    url="https://registry.npmjs.org/$package_name/-/$filename"
-    binary_name="$SOURCE_APP"
-    if [ "$os" = "windows" ]; then
-        binary_name="$SOURCE_APP.exe"
-    fi
+# Bun is the build toolchain; install the pinned version if missing or different.
+export BUN_INSTALL=${BUN_INSTALL:-$HOME/.bun}
+export PATH="$BUN_INSTALL/bin:$PATH"
+if [ "$(bun --version 2>/dev/null || true)" != "$BUN_VERSION" ]; then
+  say "installing bun $BUN_VERSION"
+  curl -fsSL https://bun.sh/install | bash -s "bun-v$BUN_VERSION" >/dev/null
 fi
 
-print_message() {
-    local level=$1
-    local message=$2
-    local color=""
-
-    case $level in
-        info) color="${NC}" ;;
-        warning) color="${NC}" ;;
-        error) color="${RED}" ;;
-    esac
-
-    echo -e "${color}${message}${NC}"
-}
-
-check_version() {
-    if command -v "$APP" >/dev/null 2>&1; then
-        openbnk_path=$(which "$APP")
-
-        ## Check the installed version
-        installed_version=$("$APP" --version 2>/dev/null || echo "")
-        installed_version="${installed_version##* }"
-        installed_version="${installed_version#v}"
-
-        print_message info "${MUTED}Installed version: ${NC}$installed_version."
-    fi
-}
-
-print_progress() {
-    local bytes="$1"
-    local length="$2"
-    [ "$length" -gt 0 ] || return 0
-
-    local width=50
-    local percent=$(( bytes * 100 / length ))
-    [ "$percent" -gt 100 ] && percent=100
-    local on=$(( percent * width / 100 ))
-    local off=$(( width - on ))
-
-    local filled=$(printf "%*s" "$on" "")
-    filled=${filled// /■}
-    local empty=$(printf "%*s" "$off" "")
-    empty=${empty// /･}
-
-    printf "\r${ORANGE}%s%s %3d%%${NC}" "$filled" "$empty" "$percent" >&4
-}
-
-download_with_progress() {
-    local url="$1"
-    local output="$2"
-
-    if [ -t 2 ]; then
-        exec 4>&2
-    else
-        exec 4>/dev/null
-    fi
-
-    local headers="${output}.headers"
-
-    # Hide cursor
-    printf "\033[?25l" >&4
-
-    trap "trap - RETURN; rm -f \"$headers\"; printf '\033[?25h' >&4; exec 4>&-" RETURN
-
-    # Poll the file size on a timer so rendering cost stays fixed no matter how many bytes arrive.
-    # Read the size with ls because busybox wc -c reads the whole file.
-    curl -fsL -D "$headers" -o "$output" "$url" &
-    local curl_pid=$!
-
-    local length bytes
-    while kill -0 "$curl_pid" 2>/dev/null; do
-        if [ -f "$output" ]; then
-            length=$(grep -i '^content-length:' "$headers" 2>/dev/null | tail -n 1 | tr -dc '0-9' || true)
-            bytes=$(ls -ln "$output" | awk '{print $5}')
-            print_progress "$bytes" "${length:-0}"
-        fi
-        sleep 0.1 2>/dev/null || sleep 1
-    done
-
-    local ret=0
-    wait "$curl_pid" || ret=$?
-    if [ "$ret" -eq 0 ]; then
-        bytes=$(ls -ln "$output" | awk '{print $5}')
-        print_progress "$bytes" "$bytes"
-    fi
-    echo "" >&4
-    return $ret
-}
-
-download_and_install() {
-    print_message info "\n${MUTED}Installing ${NC}$APP ${MUTED}version: ${NC}$specific_version"
-    local tmp_dir="${TMPDIR:-/tmp}/openbnk_install_$$"
-    mkdir -p "$tmp_dir"
-
-    if [[ "$os" == "windows" ]] || ! [ -t 2 ] || ! download_with_progress "$url" "$tmp_dir/$filename"; then
-        # Fallback to standard curl on Windows, non-TTY environments, or if custom progress fails
-        curl -f -# -L -o "$tmp_dir/$filename" "$url"
-    fi
-
-    tar -xzf "$tmp_dir/$filename" -C "$tmp_dir"
-    local installed_binary="$APP"
-    if [ "$os" = "windows" ]; then
-        installed_binary="$APP.exe"
-    fi
-    mv "$tmp_dir/package/bin/$binary_name" "$INSTALL_DIR/$installed_binary"
-    chmod 755 "$INSTALL_DIR/$installed_binary"
-    rm -rf "$tmp_dir"
-}
-
-install_from_binary() {
-    print_message info "\n${MUTED}Installing ${NC}$APP ${MUTED}from: ${NC}$binary_path"
-    local installed_binary="$APP"
-    case "$(uname -s)" in
-        MINGW*|MSYS*|CYGWIN*) installed_binary="$APP.exe" ;;
-    esac
-    cp "$binary_path" "$INSTALL_DIR/$installed_binary"
-    chmod 755 "$INSTALL_DIR/$installed_binary"
-}
-
-install_legacy_shim() {
-    local shim_os="${os:-}"
-    if [[ -z "$shim_os" ]]; then
-        case "$(uname -s)" in
-            MINGW*|MSYS*|CYGWIN*) shim_os="windows" ;;
-        esac
-    fi
-    rm -f "$INSTALL_DIR/openbnk2" "$INSTALL_DIR/openbnk2.exe" "$INSTALL_DIR/openbnk2.cmd"
-    if [[ "$shim_os" == "windows" ]]; then
-        cat > "$INSTALL_DIR/openbnk2.cmd" <<'EOF'
-@echo off
-"%~dp0openbnk.exe" %*
-exit /b %errorlevel%
-EOF
-        return
-    fi
-    cat > "$INSTALL_DIR/openbnk2" <<'EOF'
-#!/bin/sh
-exec "$(dirname "$0")/openbnk" "$@"
-EOF
-    chmod 755 "$INSTALL_DIR/openbnk2"
-}
-
-if [ -n "$binary_path" ]; then
-    install_from_binary
+# Use the checkout this script lives in, if run from one; otherwise clone or update $SRC.
+here=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || true)
+if [ -n "$here" ] && [ -f "$here/packages/cli/script/build.ts" ]; then
+  SRC=$here
+  say "building from checkout $SRC"
+elif [ -d "$SRC/.git" ]; then
+  say "updating $SRC"
+  git -C "$SRC" fetch --quiet origin "$BRANCH"
+  git -C "$SRC" checkout --quiet "$BRANCH"
+  git -C "$SRC" reset --quiet --hard "origin/$BRANCH"
 else
-    check_version
-    download_and_install
+  say "cloning $REPO into $SRC"
+  mkdir -p "$(dirname "$SRC")"
+  if [[ "$REPO" != *:* && "$REPO" != */*/* ]] && command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
+    gh repo clone "$REPO" "$SRC" -- --quiet --branch "$BRANCH"
+  else
+    url=$REPO
+    [[ "$url" == *:* ]] || url="https://github.com/$REPO.git"
+    git clone --quiet --branch "$BRANCH" "$url" "$SRC"
+  fi
 fi
-install_legacy_shim
 
+say "installing dependencies"
+(cd "$SRC" && bun install --frozen-lockfile >/dev/null 2>&1) || (cd "$SRC" && bun install --frozen-lockfile)
 
-add_to_path() {
-    local config_file=$1
-    local command=$2
+say "building openbnk (takes a minute or two)"
+out=$(mktemp -d)
+trap 'rm -rf "$out"' EXIT
+(cd "$SRC/packages/cli" && bun run script/build.ts --single --skip-install "--outdir=$out" >"$out/build.log" 2>&1) ||
+  { tail -n 40 "$out/build.log" >&2; die "build failed"; }
+binary=$(find "$out" -path '*/bin/openbnk' -type f | head -n 1)
+[ -n "$binary" ] || die "build finished but no binary was produced"
 
-    if grep -Fxq "$command" "$config_file"; then
-        print_message info "Command already exists in $config_file, skipping write."
-    elif [[ -w $config_file ]]; then
-        echo -e "\n# openbnk" >> "$config_file"
-        echo "$command" >> "$config_file"
-        print_message info "${MUTED}Successfully added ${NC}openbnk ${MUTED}to \$PATH in ${NC}$config_file"
-    else
-        print_message warning "Manually add the directory to $config_file (or similar):"
-        print_message info "  $command"
+mkdir -p "$BIN_DIR"
+install -m 0755 "$binary" "$BIN_DIR/openbnk.new"
+mv -f "$BIN_DIR/openbnk.new" "$BIN_DIR/openbnk"
+say "installed $("$BIN_DIR/openbnk" --version) to $BIN_DIR/openbnk"
+
+case ":$PATH:" in
+  *":$BIN_DIR:"*) ;;
+  *)
+    rc="$HOME/.bashrc"
+    case "${SHELL:-}" in */zsh) rc="$HOME/.zshrc" ;; esac
+    if ! grep -qs "$BIN_DIR" "$rc"; then
+      printf '\nexport PATH="%s:$PATH"\n' "$BIN_DIR" >>"$rc"
+      say "added $BIN_DIR to PATH in $rc (open a new shell)"
     fi
-}
-
-XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
-
-current_shell=$(basename "$SHELL")
-case $current_shell in
-    fish)
-        config_files="$HOME/.config/fish/config.fish"
-    ;;
-    zsh)
-        config_files="${ZDOTDIR:-$HOME}/.zshrc ${ZDOTDIR:-$HOME}/.zshenv $XDG_CONFIG_HOME/zsh/.zshrc $XDG_CONFIG_HOME/zsh/.zshenv"
-    ;;
-    bash)
-        config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
-    ;;
-    ash)
-        config_files="$HOME/.ashrc $HOME/.profile /etc/profile"
-    ;;
-    sh)
-        config_files="$HOME/.ashrc $HOME/.profile /etc/profile"
-    ;;
-    *)
-        # Default case if none of the above matches
-        config_files="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
     ;;
 esac
 
-if [[ "$no_modify_path" != "true" ]]; then
-    config_file=""
-    for file in $config_files; do
-        if [[ -f $file ]]; then
-            config_file=$file
-            break
-        fi
-    done
+cat <<EOF
 
-    if [[ -z $config_file ]]; then
-        print_message warning "No config file found for $current_shell. You may need to manually add to PATH:"
-        print_message info "  export PATH=$INSTALL_DIR:\$PATH"
-    elif [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-        case $current_shell in
-            fish)
-                add_to_path "$config_file" "fish_add_path $INSTALL_DIR"
-            ;;
-            zsh)
-                add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
-            ;;
-            bash)
-                add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
-            ;;
-            ash)
-                add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
-            ;;
-            sh)
-                add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
-            ;;
-            *)
-                export PATH=$INSTALL_DIR:$PATH
-                print_message warning "Manually add the directory to $config_file (or similar):"
-                print_message info "  export PATH=$INSTALL_DIR:\$PATH"
-            ;;
-        esac
-    fi
-fi
-
-if [ -n "${GITHUB_ACTIONS-}" ] && [ "${GITHUB_ACTIONS}" == "true" ]; then
-    echo "$INSTALL_DIR" >> $GITHUB_PATH
-    print_message info "Added $INSTALL_DIR to \$GITHUB_PATH"
-fi
-
-echo -e ""
-echo -e "${MUTED}                    ${NC}             ▄     "
-echo -e "${MUTED}█▀▀█ █▀▀█ █▀▀█ █▀▀▄ ${NC}█▀▀▀ █▀▀█ █▀▀█ █▀▀█"
-echo -e "${MUTED}█░░█ █░░█ █▀▀▀ █░░█ ${NC}█░░░ █░░█ █░░█ █▀▀▀"
-echo -e "${MUTED}▀▀▀▀ █▀▀▀ ▀▀▀▀ ▀  ▀ ${NC}▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀"
-echo -e ""
-echo -e ""
-echo -e "${MUTED}OpenBnk includes free models, to start:${NC}"
-echo -e ""
-echo -e "cd <project>  ${MUTED}# Open directory${NC}"
-echo -e "openbnk      ${MUTED}# Run command${NC}"
-echo -e ""
-echo -e "${MUTED}For more information visit ${NC}https://openbnk.local/v2/docs"
-echo -e ""
-echo -e ""
+Done. Run \`openbnk\` in a project directory to start.
+  Model server: http://10.0.75.254:8080/v1 (override: provider.bnk.options.baseURL in ~/.config/openbnk/openbnk.json)
+  Learning:     openbnk learn list | memory | undo <id> | accept <id> | off
+  Update:       re-run this installer
+EOF

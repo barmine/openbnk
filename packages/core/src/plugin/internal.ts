@@ -87,6 +87,8 @@ import { WebFetchTool } from "../tool/plugin/webfetch.js"
 import { WebSearchTool } from "../tool/plugin/websearch.js"
 import { WellKnown } from "../wellknown.js"
 import { WriteTool } from "../tool/plugin/write.js"
+import { LearningTools } from "../tool/plugin/learning.js"
+import { LearningSearch } from "../learning/search.js"
 import { AgentPlugin } from "./agent.js"
 import BrowserPlugin from "@openbnk/plugin-browser"
 import { CommandPlugin } from "./command.js"
@@ -128,6 +130,7 @@ const services = [
   Integration.Service,
   Job.Service,
   KV.Service,
+  LearningSearch.Service,
   LLMClient.Service,
   Location.Service,
   ManagedPolicy.Service,
@@ -182,6 +185,7 @@ export const requirements = LayerNode.group([
   Integration.node,
   Job.node,
   KV.node,
+  LearningSearch.node,
   llmClient,
   Location.node,
   ManagedPolicy.node,
@@ -247,6 +251,7 @@ const pre = [
   WebFetchTool.Plugin,
   WebSearchTool.Plugin,
   WriteTool.Plugin,
+  LearningTools.Plugin,
   WarmingPlugin.Plugin,
 ] as const satisfies readonly InternalPlugin[]
 

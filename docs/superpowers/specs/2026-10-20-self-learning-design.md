@@ -1,6 +1,6 @@
 # openbnk Self-Learning Loop — Design
 
-Status: draft for approval · 2026-10-20
+Status: implemented (v1) · 2026-10-20
 
 ## Intent
 
@@ -155,3 +155,27 @@ as a frozen block. They use the existing instruction mechanism (`session/instruc
 - How the TUI renders the notice and the dialog layout, following the TUI theme-token rules in
   AGENTS.md.
 - Tests, following existing package test conventions.
+
+## Implementation notes (as built)
+
+These are the places where v1 differs from the design above:
+
+- **Review mechanism.** The design called for a hidden session with tools. Instead, the review is a
+  single model call that returns JSON operations, which are applied through the same store as the
+  tools. This is more reliable with a local model and doesn't need a hidden-session concept. The
+  prompt is in `packages/core/src/learning/review.ts`.
+- **Trigger.** A review runs when a session goes idle after at least `OPENBNK_LEARNING_INTERVAL`
+  (default 10) model steps since the last review. It never runs mid-turn. One-shot `openbnk run`
+  exits before an idle review can run; the TUI and the background service run it normally.
+- **Configuration.** Settings are environment variables (`OPENBNK_LEARNING_INTERVAL`,
+  `OPENBNK_LEARNING=0`) plus `openbnk learn on|off`, rather than config keys.
+- **Search.** `session_search` uses a `LIKE` scan of `session_message` rather than an FTS5 index.
+  This is fine at personal scale. Add FTS later if it gets slow.
+- **UI.** Changes show as TUI toasts that point to `openbnk learn`. A dedicated TUI dialog is not
+  built yet.
+- **Code layout.**
+  - `packages/util/src/learning-store.ts`: storage, history, undo and proposals. It lives in util so
+    the CLI can use it without depending on core.
+  - `packages/core/src/tool/plugin/learning.ts`: the tools.
+  - `packages/core/src/learning/{review,search}.ts`: the review pass and session search.
+  - `packages/cli/src/commands/handlers/learn/`: the `openbnk learn` CLI command.

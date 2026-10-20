@@ -112,6 +112,31 @@ const Root = Spec.make(typeof OPENBNK_CLI_NAME === "string" ? OPENBNK_CLI_NAME :
         param: Flag.KeyValuePair("param").pipe(Flag.withDescription("OpenAPI path or query parameter"), Flag.optional),
       },
     }),
+    Spec.make("learn", {
+      description: "Review what the agent has learned: memory, skills, and pending proposals",
+      commands: [
+        Spec.make("list", { description: "List recent learning changes and pending proposals" }),
+        Spec.make("show", {
+          description: "Show the content of a change or proposal",
+          params: { id: Argument.String("id").pipe(Argument.withDescription("Change or proposal ID (prefix)")) },
+        }),
+        Spec.make("undo", {
+          description: "Undo an applied change",
+          params: { id: Argument.String("id").pipe(Argument.withDescription("Change ID (prefix)")) },
+        }),
+        Spec.make("accept", {
+          description: "Accept a proposed change to one of your skills",
+          params: { id: Argument.String("id").pipe(Argument.withDescription("Proposal ID (prefix)")) },
+        }),
+        Spec.make("reject", {
+          description: "Reject a proposed change to one of your skills",
+          params: { id: Argument.String("id").pipe(Argument.withDescription("Proposal ID (prefix)")) },
+        }),
+        Spec.make("memory", { description: "Print the current memory files" }),
+        Spec.make("on", { description: "Enable self-learning" }),
+        Spec.make("off", { description: "Disable self-learning" }),
+      ],
+    }),
     Spec.make("debug", {
       description: "Debugging and troubleshooting tools",
       commands: [

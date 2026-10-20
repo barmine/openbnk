@@ -1,125 +1,81 @@
-<p align="center">
-  <a href="https://openbnk.local">
-    <picture>
-      <source srcset="packages/console/app/src/asset/logo-ornate-dark.svg" media="(prefers-color-scheme: dark)">
-      <source srcset="packages/console/app/src/asset/logo-ornate-light.svg" media="(prefers-color-scheme: light)">
-      <img src="packages/console/app/src/asset/logo-ornate-light.svg" alt="OpenBnk logo">
-    </picture>
-  </a>
-</p>
-<p align="center">The open source AI coding agent.</p>
-<p align="center">
-  <a href="https://openbnk.local/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
-  <a href="https://www.npmjs.com/package/@openbnk/cli"><img alt="npm" src="https://img.shields.io/npm/v/@openbnk/cli?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/openbnk/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/openbnk/publish.yml?style=flat-square&branch=dev" /></a>
-</p>
+# openbnk
 
-<p align="center">
-  <a href="README.md">English</a> |
-  <a href="README.zh.md">简体中文</a> |
-  <a href="README.zht.md">繁體中文</a> |
-  <a href="README.ko.md">한국어</a> |
-  <a href="README.de.md">Deutsch</a> |
-  <a href="README.es.md">Español</a> |
-  <a href="README.fr.md">Français</a> |
-  <a href="README.it.md">Italiano</a> |
-  <a href="README.da.md">Dansk</a> |
-  <a href="README.ja.md">日本語</a> |
-  <a href="README.pl.md">Polski</a> |
-  <a href="README.ru.md">Русский</a> |
-  <a href="README.bs.md">Bosanski</a> |
-  <a href="README.ar.md">العربية</a> |
-  <a href="README.no.md">Norsk</a> |
-  <a href="README.br.md">Português (Brasil)</a> |
-  <a href="README.th.md">ไทย</a> |
-  <a href="README.tr.md">Türkçe</a> |
-  <a href="README.uk.md">Українська</a> |
-  <a href="README.bn.md">বাংলা</a> |
-  <a href="README.gr.md">Ελληνικά</a> |
-  <a href="README.vi.md">Tiếng Việt</a>
-</p>
+A private, self-hosted fork of [opencode](https://github.com/anomalyco/opencode). It keeps the full
+opencode agent harness (TUI, CLI, tools, MCP, plugins, skills) and makes three changes:
 
-[![OpenBnk Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://openbnk.local)
+- **Local inference only.** The only built-in model provider is your OpenAI-compatible server at
+  `http://10.0.75.254:8080/v1`. Every model it serves (`GET /v1/models`) shows up automatically. Hosted
+  providers are not registered.
+- **No phone-home.** Nothing contacts opencode or Anomaly infrastructure: no models.dev catalog fetch,
+  no update checks, no remote-access tunnel, no hosted MCP OAuth client document, and no Sentry. The
+  agent can still use the internet on your behalf (web fetch, web search, MCP servers, plugin and skill
+  installs).
+- **Self-learning.** openbnk gets better the more you use it. See below.
 
----
+## Install
 
-### Installation
+On any Linux or macOS machine that has `git`, `curl` and `unzip`, plus `gh` logged in to GitHub:
 
-```bash
-# YOLO
-curl -fsSL https://openbnk.local/v2/install | bash
-
-# Package managers
-npm i -g @openbnk/cli@latest      # or bun/pnpm/yarn
-brew install anomalyco/tap/openbnk-v2 # macOS and Linux (recommended, always up to date)
-brew install openbnk              # macOS and Linux (official brew formula, updated less)
-sudo pacman -S openbnk            # Arch Linux (Stable)
-paru -S openbnk-beta              # Arch Linux (Latest from AUR)
-mise use -g openbnk               # Any OS
-nix run github:anomalyco/openbnk  # Nix
+```sh
+bash <(gh api repos/christ-pher/openbnk/contents/install -H "Accept: application/vnd.github.raw")
 ```
 
-> [!TIP]
-> Remove versions older than 0.1.x before installing.
+Or from a checkout, run `./install`. The installer:
 
-### Desktop App (BETA)
+1. installs Bun if it's missing,
+2. clones the source to `~/.local/share/openbnk/src`,
+3. builds a native binary,
+4. installs it to `~/.local/bin/openbnk`.
 
-OpenBnk is also available as a desktop application. Download it from [openbnk.local/download](https://openbnk.local/download).
+To update, re-run the installer.
 
-| Platform              | Download                           |
-| --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `openbnk-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `openbnk-desktop-mac-x64.dmg`     |
-| Windows               | `openbnk-desktop-win-x64.exe`     |
-| Linux                 | `.deb`, `.rpm`, or `.AppImage`     |
+To point at a different model server, set this in `~/.config/openbnk/openbnk.json`:
 
-```bash
-# macOS (Homebrew)
-brew install --cask openbnk-desktop
+```json
+{ "provider": { "bnk": { "options": { "baseURL": "http://my-server:8080/v1" } } } }
 ```
 
-#### Installation Directory
+## Self-learning
 
-The install script respects the following priority order for the installation path:
+This is modelled on [Hermes Agent](https://github.com/NousResearch/hermes-agent)'s learning loop.
 
-1. `$OPENBNK_INSTALL_DIR` - Custom installation directory
-2. `$XDG_BIN_DIR` - XDG Base Directory Specification compliant path
-3. `$HOME/bin` - Standard user binary directory (if it exists or can be created)
-4. `$HOME/.openbnk/bin` - Default fallback
+- **Memory.** There are two small notes files, loaded into every session:
+  - `~/.config/openbnk/learning/memory/USER.md`: your preferences, corrections and setup.
+  - `~/.config/openbnk/learning/memory/NOTES.md`: environment and project facts.
 
-```bash
-# Examples
-OPENBNK_INSTALL_DIR=/usr/local/bin curl -fsSL https://openbnk.local/v2/install | bash
-XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://openbnk.local/v2/install | bash
+  The agent maintains them with its `memory` tool. You can also just say "remember this".
+- **Background review.** After every 10 model steps in a session (`OPENBNK_LEARNING_INTERVAL`), once
+  the session goes idle, a background pass on your local model re-reads the conversation. It saves
+  corrections, techniques and fixes to memory or skills. A toast in the TUI tells you what it learned.
+- **Self-written skills.** The agent creates and refines skills in `~/.config/openbnk/skills/learned/`.
+  These load like any other skill.
+- **Your skills are protected.** Changes the agent wants to make to skills you installed or wrote are
+  queued as proposals for you to approve.
+- **Past-session recall.** The `session_search` tool searches the text of your previous conversations.
+
+Every change is versioned and can be undone:
+
+```sh
+openbnk learn list          # recent changes and pending proposals
+openbnk learn show <id>     # before/after
+openbnk learn undo <id>     # roll back an applied change
+openbnk learn accept <id>   # apply a proposed change to one of your skills
+openbnk learn reject <id>
+openbnk learn memory        # print current memory
+openbnk learn off | on      # disable/enable learning (or OPENBNK_LEARNING=0)
 ```
 
-### Agents
+The design is in `docs/superpowers/specs/2026-10-20-self-learning-design.md`.
 
-OpenBnk includes two built-in agents you can switch between with the `Tab` key.
+## Development
 
-- **build** - Default, full-access agent for development work
-- **plan** - Read-only agent for analysis and code exploration
-  - Denies file edits by default
-  - Asks permission before running bash commands
-  - Ideal for exploring unfamiliar codebases or planning changes
+```sh
+bun install
+bun run dev                 # run the TUI from source
+bun run dev run "hello"     # one-shot prompt
+```
 
-Also included is a **general** subagent for complex searches and multistep tasks.
-This is used internally and can be invoked using `@general` in messages.
+The `upstream` remote tracks opencode. Merge upstream changes with
+`git fetch upstream && git merge upstream/dev`. Expect conflicts in renamed files.
 
-Learn more about [agents](https://openbnk.local/docs/agents).
-
-### Documentation
-
-For more info on how to configure OpenBnk, [**head over to our docs**](https://openbnk.local/docs).
-
-### Contributing
-
-If you're interested in contributing to OpenBnk, please read our [contributing docs](./CONTRIBUTING.md) before submitting a pull request.
-
-### Building on OpenBnk
-
-If you are working on a project that's related to OpenBnk and is using "openbnk" as part of its name, for example "openbnk-dashboard" or "openbnk-mobile", please add a note to your README to clarify that it is not built by the OpenBnk team and is not affiliated with us in any way.
-
----
-
-**Join our community** [Discord](https://discord.gg/openbnk) | [X.com](https://x.com/openbnk)
+License: MIT (see LICENSE), inherited from opencode.

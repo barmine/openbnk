@@ -19,6 +19,7 @@ import { SessionSchema } from "../schema.js"
 import { SessionStore } from "../store.js"
 import { SessionMessageTable } from "../sql.js"
 import { SessionTitle } from "../title.js"
+import { LearningReview } from "../../learning/review.js"
 import { toSessionError } from "../to-session-error.js"
 import { DrainResult, Service, type Interface } from "./index.js"
 import { Snapshot } from "../../snapshot.js"
@@ -49,6 +50,12 @@ const layer = Layer.effect(
     const compaction = yield* SessionCompaction.Service
     const plugins = yield* Plugin.Service
     const title = yield* SessionTitle.Service
+    const learning = yield* LearningReview.Service
+    // Steps since the last learning review, per session. Reviews run once the session goes idle so
+    // they never compete with the user's own requests for the model.
+    const reviewInterval = Number(process.env.OPENBNK_LEARNING_INTERVAL ?? 10) || 10
+    const sinceReview = new Map<SessionSchema.ID, number>()
+    const reviews = yield* FiberMap.make<SessionSchema.ID, void, never>()
     const steps = yield* SessionStep.make
     // Title generation starts once input is visible and must not delay model execution.
     const titles = yield* FiberMap.make<SessionSchema.ID, void, never>()
@@ -184,7 +191,14 @@ const layer = Layer.effect(
 
       while (true) {
         const next = yield* advanceToStep()
-        if (next._tag !== "Ready") return next
+        if (next._tag !== "Ready") {
+          if ((sinceReview.get(sessionID) ?? 0) >= reviewInterval) {
+            sinceReview.delete(sessionID)
+            yield* FiberMap.run(reviews, sessionID, learning.review(sessionID), { onlyIfMissing: true })
+          }
+          return next
+        }
+        sinceReview.set(sessionID, (sinceReview.get(sessionID) ?? 0) + 1)
         continuing = yield* runStep(next.context, step)
         step++
         force = false
@@ -395,6 +409,7 @@ export const node = makeLocationNode({
     SessionCompaction.node,
     Plugin.node,
     SessionTitle.node,
+    LearningReview.node,
     Snapshot.node,
     ToolOutput.node,
     Database.node,
