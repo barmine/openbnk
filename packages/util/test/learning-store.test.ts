@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import fs from "fs"
 import os from "os"
 import path from "path"
-import { LearningStore } from "../src/learning-store"
+import { LearningStore } from "../src/learning-store.js"
 
 const skill = (name: string, body: string) => `---\nname: ${name}\ndescription: test skill\n---\n\n${body}\n`
 

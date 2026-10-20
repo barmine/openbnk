@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { LearningReview } from "../src/learning/review"
+import { LearningReview } from "../src/learning/review.js"
 
 describe("learning review parse", () => {
   test("extracts operations from fenced JSON and drops invalid ones", () => {
