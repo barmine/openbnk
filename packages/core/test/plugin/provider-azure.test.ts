@@ -1,22 +1,22 @@
 import { chmod } from "node:fs/promises"
-import { Agent } from "@opencode/core/agent"
+import { Agent } from "@openbnk/core/agent"
 import { describe, expect } from "bun:test"
 import { Effect, Schedule, Schema } from "effect"
-import { Config } from "@opencode/core/config"
-import { ConfigProviderPlugin } from "@opencode/core/config/plugin/provider"
-import { Bus } from "@opencode/core/bus"
-import { Credential } from "@opencode/core/credential"
-import { Model } from "@opencode/core/model"
-import { Plugin } from "@opencode/core/plugin"
-import { PluginHost } from "@opencode/core/plugin/host"
-import { PluginHooks } from "@opencode/core/plugin/hooks"
-import { make } from "@opencode/core/plugin/provider/azure"
-import { Provider } from "@opencode/core/provider"
-import { Integration } from "@opencode/core/integration"
-import { Location } from "@opencode/core/location"
-import { Session } from "@opencode/core/session"
-import { Document, Info } from "@opencode/schema/config"
-import { AppProcess } from "@opencode/util/process"
+import { Config } from "@openbnk/core/config"
+import { ConfigProviderPlugin } from "@openbnk/core/config/plugin/provider"
+import { Bus } from "@openbnk/core/bus"
+import { Credential } from "@openbnk/core/credential"
+import { Model } from "@openbnk/core/model"
+import { Plugin } from "@openbnk/core/plugin"
+import { PluginHost } from "@openbnk/core/plugin/host"
+import { PluginHooks } from "@openbnk/core/plugin/hooks"
+import { make } from "@openbnk/core/plugin/provider/azure"
+import { Provider } from "@openbnk/core/provider"
+import { Integration } from "@openbnk/core/integration"
+import { Location } from "@openbnk/core/location"
+import { Session } from "@openbnk/core/session"
+import { Document, Info } from "@openbnk/schema/config"
+import { AppProcess } from "@openbnk/util/process"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
 
@@ -180,7 +180,7 @@ const seedProvider = (settings?: Provider.Settings) =>
     const catalog = yield* Provider.Service
     yield* catalog.transform((editor) => {
       editor.update(Provider.ID.azure, (provider) => {
-        provider.package = "@opencode/ai/providers/azure/responses"
+        provider.package = "@openbnk/ai/providers/azure/responses"
         if (settings) provider.settings = settings
       })
     })
@@ -201,7 +201,7 @@ const seedCatalog = Effect.gen(function* () {
     })
     editor.models.update(Provider.ID.azure, Model.ID.make("deepseek-v4-flash"), (model) => {
       model.name = "DeepSeek-V4-Flash"
-      model.package = "@opencode/ai/providers/openai-compatible"
+      model.package = "@openbnk/ai/providers/openai-compatible"
       model.settings = { baseURL: "https://${AZURE_RESOURCE_NAME}.services.ai.azure.com/models" }
     })
   })
@@ -651,14 +651,14 @@ describe("AzurePlugin resource name", () => {
       const models = yield* Model.Service
       yield* providers.transform((editor) => {
         editor.update(Provider.ID.azure, (provider) => {
-          provider.package = "@opencode/ai/providers/openai-compatible"
+          provider.package = "@openbnk/ai/providers/openai-compatible"
           provider.activation = "enabled"
           provider.settings = {
             baseURL: "https://${AZURE_COGNITIVE_SERVICES_RESOURCE_NAME}.cognitiveservices.azure.com/openai",
           }
         })
         editor.models.update(Provider.ID.azure, Model.ID.make("anthropic"), (model) => {
-          model.package = "@opencode/ai/providers/anthropic"
+          model.package = "@openbnk/ai/providers/anthropic"
           model.settings = {
             resourceName: "model-resource",
             baseURL: "https://${AZURE_RESOURCE_NAME}.services.ai.azure.com/anthropic/v1",
@@ -688,7 +688,7 @@ describe("AzurePlugin transport", () => {
       const variants: Record<string, (model: Model.MutableInfo) => void> = {
         responses: () => {},
         chat: (model) => {
-          model.package = "@opencode/ai/providers/azure/chat"
+          model.package = "@openbnk/ai/providers/azure/chat"
         },
         preview: (model) => {
           model.settings = { apiVersion: "2025-04-01-preview" }
@@ -700,12 +700,12 @@ describe("AzurePlugin transport", () => {
           model.settings = { baseURL: "https://gateway.example/azure" }
         },
         "non-azure": (model) => {
-          model.package = "@opencode/ai/providers/anthropic"
+          model.package = "@openbnk/ai/providers/anthropic"
         },
       }
       yield* providers.transform((editor) => {
         editor.update(Provider.ID.azure, (provider) => {
-          provider.package = "@opencode/ai/providers/azure/responses"
+          provider.package = "@openbnk/ai/providers/azure/responses"
           provider.activation = "enabled"
         })
         Object.entries(variants).forEach(([id, update]) =>

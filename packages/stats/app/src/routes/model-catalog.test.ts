@@ -5,7 +5,7 @@ mock.module("@solidjs/router", () => ({ query: (load: () => unknown) => load }))
 const { buildModelCatalog, findModelCatalogEntry, isKnownCatalogLab } = await import("./model-catalog")
 
 describe("model catalog pricing", () => {
-  test("prefers OpenCode Go pricing over a zero-cost coding plan with the same model id", () => {
+  test("prefers OpenBnk Go pricing over a zero-cost coding plan with the same model id", () => {
     const catalog = buildModelCatalog(
       {
         models: {
@@ -16,8 +16,8 @@ describe("model catalog pricing", () => {
         },
       },
       {
-        "opencode-go": {
-          id: "opencode-go",
+        "openbnk-go": {
+          id: "openbnk-go",
           models: {
             "glm-5.3": {
               id: "glm-5.3",

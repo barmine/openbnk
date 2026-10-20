@@ -28,7 +28,7 @@ export type HomeIndexDirectory = {
 }
 
 const repos = [
-  "opencode",
+  "openbnk",
   "storefront-api",
   "billing-worker",
   "design-system",

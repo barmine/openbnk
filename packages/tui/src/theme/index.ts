@@ -1,8 +1,8 @@
-import { migrateV1, parseThemeDocument, type ThemeDocument, type ModeDefinition } from "@opencode/theme/tui"
+import { migrateV1, parseThemeDocument, type ThemeDocument, type ModeDefinition } from "@openbnk/theme/tui"
 import { resolveThemeColors } from "./resolve"
 import { DEFAULT_THEMES, type Theme, type ThemeV1Json } from "./v1"
-import opencode from "./assets/v2/opencode.json" with { type: "json" }
-import opencode2 from "./assets/v2/opencode2.json" with { type: "json" }
+import openbnk from "./assets/v2/openbnk.json" with { type: "json" }
+import openbnk2 from "./assets/v2/openbnk2.json" with { type: "json" }
 
 export { DEFAULT_THEMES, type Theme, type ThemeV1Json } from "./v1"
 
@@ -12,37 +12,37 @@ let customThemes: Record<string, ThemeDocumentSource> = {}
 let systemTheme: ThemeDocumentSource | undefined
 const listeners = new Set<(themes: Record<string, ThemeDocumentSource>) => void>()
 const parsed = new WeakMap<object, ThemeDocument>()
-let opencodeTheme: (ThemeDocument & {
+let openbnkTheme: (ThemeDocument & {
   readonly light: ModeDefinition
   readonly dark: ModeDefinition
 }) | undefined
 
-export function getOpenCodeTheme() {
-  if (opencodeTheme) return opencodeTheme
-  const document = parseThemeDocument(opencode, "opencode") as NonNullable<typeof opencodeTheme>
-  opencodeTheme = document
+export function getOpenBnkTheme() {
+  if (openbnkTheme) return openbnkTheme
+  const document = parseThemeDocument(openbnk, "openbnk") as NonNullable<typeof openbnkTheme>
+  openbnkTheme = document
   return document
 }
 
-let opencode2Theme: ThemeDocument | undefined
+let openbnk2Theme: ThemeDocument | undefined
 
 // Temporary theme for the "new-designs" experiment. It is not part of allThemes(), so only the
 // TUI theme context offers it, and only while the experiment is enabled.
-export function getOpenCode2Theme() {
-  opencode2Theme ??= parseThemeDocument(opencode2, "opencode2")
-  return opencode2Theme
+export function getOpenBnk2Theme() {
+  openbnk2Theme ??= parseThemeDocument(openbnk2, "openbnk2")
+  return openbnk2Theme
 }
 
 function listThemes(): Record<string, ThemeDocumentSource> {
   // Priority: defaults < custom files < generated system.
   const themes: Record<string, ThemeDocumentSource> = {
     ...DEFAULT_THEMES,
-    opencode: getOpenCodeTheme(),
+    openbnk: getOpenBnkTheme(),
     ...customThemes,
   }
   return {
     ...themes,
-    system: systemTheme ?? themes.system ?? themes.opencode,
+    system: systemTheme ?? themes.system ?? themes.openbnk,
   }
 }
 

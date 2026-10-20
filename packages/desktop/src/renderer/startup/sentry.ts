@@ -1,11 +1,12 @@
 import pkg from "../../../package.json"
 
 export function desktopVersion() {
-  return import.meta.env.OPENCODE_VERSION ?? pkg.version
+  return import.meta.env.OPENBNK_VERSION ?? pkg.version
 }
 
 export async function initializeSentry(version: string) {
-  if (!import.meta.env.VITE_SENTRY_DSN) return
+  // Crash reporting is disabled in this fork; nothing is sent to Sentry.
+  if (true as boolean || !import.meta.env.VITE_SENTRY_DSN) return
   const { init } = await import("@sentry/solid")
   init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -21,7 +22,7 @@ export async function initializeSentry(version: string) {
         (integration) =>
           integration.name !== "Breadcrumbs" &&
           !(
-            import.meta.env.OPENCODE_CHANNEL === "prod" &&
+            import.meta.env.OPENBNK_CHANNEL === "prod" &&
             (integration.name === "GlobalHandlers" || integration.name === "BrowserApiErrors")
           ),
       ),

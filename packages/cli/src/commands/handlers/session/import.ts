@@ -1,6 +1,6 @@
-import { OpenCode } from "@opencode/client"
-import { Service } from "@opencode/client/effect/service"
-import { Session } from "@opencode/schema/session"
+import { OpenBnk } from "@openbnk/client"
+import { Service } from "@openbnk/client/effect/service"
+import { Session } from "@openbnk/schema/session"
 import { Effect, Option, Schema } from "effect"
 import { EOL } from "node:os"
 import path from "node:path"
@@ -30,7 +30,7 @@ export default Runtime.handler(
       server: Option.getOrUndefined(input.server),
       standalone: input.standalone,
     })
-    const client = OpenCode.make({
+    const client = OpenBnk.make({
       baseUrl: server.endpoint.url,
       headers: Service.headers(server.endpoint),
     })

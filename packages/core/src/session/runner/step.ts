@@ -8,10 +8,10 @@ import {
   isContextOverflowFailure,
   type ProviderErrorEvent,
   type ToolCall,
-} from "@opencode/ai"
-import type { Agent } from "@opencode/schema/agent"
+} from "@openbnk/ai"
+import type { Agent } from "@openbnk/schema/agent"
 import { Cause, Clock, Data, Effect, Exit, Fiber, Option, Stream } from "effect"
-import { SessionError } from "@opencode/schema/session-error"
+import { SessionError } from "@openbnk/schema/session-error"
 import { Bus } from "../../bus.js"
 import { Permission } from "../../permission.js"
 import { Snapshot } from "../../snapshot.js"

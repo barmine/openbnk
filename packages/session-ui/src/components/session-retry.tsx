@@ -1,10 +1,10 @@
 import { createEffect, createMemo, createSignal, on, onCleanup, Show } from "solid-js"
-import type { SessionStatus } from "@opencode/client/promise"
-import { useI18n } from "@opencode/ui/context/i18n"
-import { Card } from "@opencode/ui/card"
-import { Icon } from "@opencode/ui/icon"
-import { TextShimmer } from "@opencode/ui/text-shimmer"
-import { Tooltip } from "@opencode/ui/tooltip"
+import type { SessionStatus } from "@openbnk/client/promise"
+import { useI18n } from "@openbnk/ui/context/i18n"
+import { Card } from "@openbnk/ui/card"
+import { Icon } from "@openbnk/ui/icon"
+import { TextShimmer } from "@openbnk/ui/text-shimmer"
+import { Tooltip } from "@openbnk/ui/tooltip"
 import { SessionErrorMessage } from "./session-error"
 
 export function SessionRetry(props: { status: SessionStatus; show?: boolean }) {

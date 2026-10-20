@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "version": "2.1.1",
-  "name": "@opencode/sdk",
+  "name": "@openbnk/sdk",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/anomalyco/openbnk.git",
     "directory": "packages/sdk"
   },
   "publishConfig": {
@@ -28,18 +28,18 @@
     "verify:package": "bun run script/verify-package.ts"
   },
   "dependencies": {
-    "@opencode/client": "workspace:*",
-    "@opencode/core": "workspace:*",
-    "@opencode/plugin": "workspace:*",
-    "@opencode/schema": "workspace:*",
-    "@opencode/server": "workspace:*",
-    "@opencode/util": "workspace:*",
+    "@openbnk/client": "workspace:*",
+    "@openbnk/core": "workspace:*",
+    "@openbnk/plugin": "workspace:*",
+    "@openbnk/schema": "workspace:*",
+    "@openbnk/server": "workspace:*",
+    "@openbnk/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@opencode/ai": "workspace:*",
-    "@opencode/httpapi-codegen": "workspace:*",
-    "@opencode/protocol": "workspace:*",
+    "@openbnk/ai": "workspace:*",
+    "@openbnk/httpapi-codegen": "workspace:*",
+    "@openbnk/protocol": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@typescript/native": "catalog:"

@@ -1,8 +1,8 @@
-import { Shell } from "@opencode/core/shell"
-import { Location } from "@opencode/core/location"
+import { Shell } from "@openbnk/core/shell"
+import { Location } from "@openbnk/core/location"
 import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/http-api"
-import { ShellNotFoundError } from "@opencode/protocol/errors"
+import { ShellNotFoundError } from "@openbnk/protocol/errors"
 import { Api } from "../api"
 import { response } from "../location"
 

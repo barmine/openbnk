@@ -1,5 +1,5 @@
-import type { McpApi } from "@opencode/client/promise/api"
-import type { Mcp } from "@opencode/schema/mcp"
+import type { McpApi } from "@openbnk/client/promise/api"
+import type { Mcp } from "@openbnk/schema/mcp"
 import type { Transform } from "./registration.js"
 import type { DeepMutable } from "./types.js"
 

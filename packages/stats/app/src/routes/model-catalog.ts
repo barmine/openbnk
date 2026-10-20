@@ -1,9 +1,9 @@
-import { STEALTH_MODELS, statModel } from "@opencode/stats-core/domain/model-normalization"
+import { STEALTH_MODELS, statModel } from "@openbnk/stats-core/domain/model-normalization"
 import { query } from "@solidjs/router"
 
-export const modelCatalogSourceUrl = "https://models.opencode.ai/catalog.json"
-export const modelCatalogPricingUrl = "https://models.opencode.ai/api.json"
-export const modelCatalogLabSourceUrl = "https://models.opencode.ai/labs"
+export const modelCatalogSourceUrl = "https://models.openbnk.local/catalog.json"
+export const modelCatalogPricingUrl = "https://models.openbnk.local/api.json"
+export const modelCatalogLabSourceUrl = "https://models.openbnk.local/labs"
 
 export type ModelCatalogCost = {
   input: number
@@ -58,7 +58,7 @@ export type ModelCatalog = {
   models: ModelCatalogEntry[]
   aliases?: ModelCatalogEntry[]
   labs: ModelCatalogLab[]
-  // Stealth models stay out of the lab catalog, but their OpenCode listings publish limits and modalities.
+  // Stealth models stay out of the lab catalog, but their OpenBnk listings publish limits and modalities.
   stealthSpecs: Record<string, ModelCatalogSpecs>
 }
 
@@ -205,7 +205,7 @@ export function buildModelCatalog(payload: unknown, pricingPayload?: unknown, la
       cost:
         costs.get(catalogIdKey(model.id)) ??
         costs.get(`${model.lab}/${model.slug}`) ??
-        costs.get(`opencode-go/${model.slug}`) ??
+        costs.get(`openbnk-go/${model.slug}`) ??
         costs.get(model.slug) ??
         model.cost,
     }))
@@ -249,8 +249,8 @@ export function buildModelCatalog(payload: unknown, pricingPayload?: unknown, la
 function readStealthModelSpecs(payload: unknown): Record<string, ModelCatalogSpecs> {
   if (!isRecord(payload)) return {}
   return Object.fromEntries(
-    // Later entries win, so the opencode listing takes precedence over opencode-go.
-    ["opencode-go", "opencode"]
+    // Later entries win, so the openbnk listing takes precedence over openbnk-go.
+    ["openbnk-go", "openbnk"]
       .map((provider) => payload[provider])
       .flatMap((provider) => (isRecord(provider) && isRecord(provider.models) ? Object.entries(provider.models) : []))
       .flatMap(([id, value]) => {

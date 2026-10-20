@@ -6,14 +6,14 @@ import {
   ToolResultPart,
   type ContentPart,
   type ProviderMetadata,
-} from "@opencode/ai"
-import type { Model } from "@opencode/schema/model"
+} from "@openbnk/ai"
+import type { Model } from "@openbnk/schema/model"
 import { Option, Schema } from "effect"
 import { fileURLToPath } from "url"
 import { SessionMessage } from "../message.js"
 import { SessionHistory } from "../history.js"
 import { SessionRecentText } from "../recent-text.js"
-import type { FileAttachment } from "@opencode/schema/prompt"
+import type { FileAttachment } from "@openbnk/schema/prompt"
 
 const imageMimes = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"])
 
@@ -314,7 +314,7 @@ function toLLMMessage(message: SessionMessage.Info, model: Model.Ref, providerMe
   }
 }
 
-/** Translate projected Session history into canonical @opencode/ai context. */
+/** Translate projected Session history into canonical @openbnk/ai context. */
 export const toLLMMessages = (
   messages: readonly SessionMessage.Info[],
   model: Model.Ref,

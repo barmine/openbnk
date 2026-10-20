@@ -1,8 +1,8 @@
-import { Button } from "@opencode/ui/button"
+import { Button } from "@openbnk/ui/button"
 import { DockPrompt } from "./dock-prompt"
 
 export default {
-  title: "OpenCode/Requests/Prompt frame",
+  title: "OpenBnk/Requests/Prompt frame",
   id: "components-dock-prompt",
   component: DockPrompt,
   parameters: {

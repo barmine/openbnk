@@ -18,14 +18,14 @@ import {
 import { OAuthMetadataSchema, OpenIdProviderDiscoveryMetadataSchema } from "@modelcontextprotocol/core"
 import { Cause, Deferred, Effect } from "effect"
 import type { ServerResponse } from "node:http"
-import { ConfigMCP } from "@opencode/schema/config/mcp"
+import { ConfigMCP } from "@openbnk/schema/config/mcp"
 import { Credential } from "../credential.js"
 import { OauthCallbackPage } from "../oauth/page.js"
 import type { Integration } from "../integration.js"
 import { ErrorSummary } from "../util/error-summary.js"
 
 /** Client ID Metadata Document: servers that support CIMD accept this URL as the client_id without registration. */
-export const CLIENT_METADATA_URL = "https://opencode.ai/oauth/opencode/client.json"
+export const CLIENT_METADATA_URL = "https://openbnk.local/oauth/openbnk/client.json"
 
 // Refresh tokens rotate, so concurrent refreshes of the same token share one request or the second gets invalid_grant.
 const refreshes = new Map<string, ReturnType<FetchLike>>()
@@ -180,8 +180,7 @@ export const provider = (options: Options): OAuthClientProvider => {
     ...(redirect ? { state: () => redirect.state } : {}),
     clientMetadata: {
       redirect_uris: [redirectUrl],
-      client_name: "opencode",
-      client_uri: "https://opencode.ai",
+      client_name: "openbnk",
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: client?.client_secret ? "client_secret_post" : "none",
@@ -410,7 +409,7 @@ export const authorize = (input: {
           jsonrpc: "2.0",
           id: 0,
           method: "initialize",
-          params: { protocolVersion: LATEST_PROTOCOL_VERSION, capabilities: {}, clientInfo: { name: "opencode" } },
+          params: { protocolVersion: LATEST_PROTOCOL_VERSION, capabilities: {}, clientInfo: { name: "openbnk" } },
         }),
         signal,
       }),
@@ -428,21 +427,17 @@ export const authorize = (input: {
         discoverOAuthServerInfo(input.config.url, { resourceMetadataUrl, fetchFn }),
       catch: (error) => (error instanceof Error ? error : new Error(String(error))),
     })
-    const cimd =
-      !oauth?.client_id &&
-      !oauth?.redirect_uri &&
-      discovery.authorizationServerMetadata?.client_id_metadata_document_supported === true &&
-      (discovery.authorizationServerMetadata.token_endpoint_auth_methods_supported?.includes("none") ?? false)
     yield* Effect.logInfo("mcp oauth client registration selected", {
       ...fields,
-      registration: oauth?.client_id ? "static" : cimd ? "cimd" : "dcr",
+      registration: oauth?.client_id ? "static" : "dcr",
     })
 
     let authorizationUrl: URL | undefined
     const oauthProvider = provider({
       config: input.config,
       store,
-      clientMetadataUrl: cimd ? CLIENT_METADATA_URL : undefined,
+      // CIMD makes the MCP server fetch our client document from a public host; always use DCR instead.
+      clientMetadataUrl: undefined,
       discovery: { ...discovery, resourceMetadataUrl: resourceMetadataUrl?.toString() },
       redirect: {
         url: oauth?.redirect_uri ?? `http://127.0.0.1:${port}${redirectPath}`,

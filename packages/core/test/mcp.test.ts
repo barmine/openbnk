@@ -9,34 +9,34 @@ import {
   Server,
   WebStandardStreamableHTTPServerTransport,
 } from "@modelcontextprotocol/server"
-import { Document, Event, Info } from "@opencode/schema/config"
-import { ConfigMCP } from "@opencode/schema/config/mcp"
-import { McpEvent } from "@opencode/schema/mcp-event"
-import { ConfigPolicy } from "@opencode/schema/config/policy"
-import { ManagedPolicy } from "@opencode/core/managed-policy"
-import { Config } from "@opencode/core/config"
-import { ConfigMcpPlugin } from "@opencode/core/config/plugin/mcp"
-import { Credential } from "@opencode/core/credential"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Bus } from "@opencode/core/bus"
-import { ID, type Payload } from "@opencode/schema/event"
-import { Form } from "@opencode/core/form"
-import { Integration } from "@opencode/core/integration"
-import { Environment } from "@opencode/core/environment/index"
-import { EnvironmentUnavailable } from "@opencode/core/environment/unavailable"
-import { Location } from "@opencode/core/location"
-import { Mcp } from "@opencode/core/mcp/index"
-import { McpClient } from "@opencode/core/mcp/client"
-import { McpStdio } from "@opencode/core/mcp/stdio"
-import { Permission } from "@opencode/core/permission"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Session } from "@opencode/core/session"
-import { State } from "@opencode/core/state"
-import { McpTool } from "@opencode/core/tool/mcp"
-import { McpResourceTools } from "@opencode/core/tool/plugin/mcp-resource"
-import { Tool } from "@opencode/core/tool"
-import { ToolOutput } from "@opencode/core/tool-output"
+import { Document, Event, Info } from "@openbnk/schema/config"
+import { ConfigMCP } from "@openbnk/schema/config/mcp"
+import { McpEvent } from "@openbnk/schema/mcp-event"
+import { ConfigPolicy } from "@openbnk/schema/config/policy"
+import { ManagedPolicy } from "@openbnk/core/managed-policy"
+import { Config } from "@openbnk/core/config"
+import { ConfigMcpPlugin } from "@openbnk/core/config/plugin/mcp"
+import { Credential } from "@openbnk/core/credential"
+import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
+import { Bus } from "@openbnk/core/bus"
+import { ID, type Payload } from "@openbnk/schema/event"
+import { Form } from "@openbnk/core/form"
+import { Integration } from "@openbnk/core/integration"
+import { Environment } from "@openbnk/core/environment/index"
+import { EnvironmentUnavailable } from "@openbnk/core/environment/unavailable"
+import { Location } from "@openbnk/core/location"
+import { Mcp } from "@openbnk/core/mcp/index"
+import { McpClient } from "@openbnk/core/mcp/client"
+import { McpStdio } from "@openbnk/core/mcp/stdio"
+import { Permission } from "@openbnk/core/permission"
+import { AbsolutePath } from "@openbnk/core/schema"
+import { Session } from "@openbnk/core/session"
+import { State } from "@openbnk/core/state"
+import { McpTool } from "@openbnk/core/tool/mcp"
+import { McpResourceTools } from "@openbnk/core/tool/plugin/mcp-resource"
+import { Tool } from "@openbnk/core/tool"
+import { ToolOutput } from "@openbnk/core/tool-output"
 import {
   Context,
   Deferred,
@@ -55,7 +55,7 @@ import {
 import { TestClock } from "effect/testing"
 import { ChildProcess, ChildProcessSpawner } from "effect/process"
 import { ExitCode, makeHandle, ProcessId } from "effect/process/ChildProcessSpawner"
-import { Image } from "@opencode/core/image"
+import { Image } from "@openbnk/core/image"
 import { advance, drain } from "./lib/clock"
 import { testEffect } from "./lib/effect"
 import { registerIntegrationPolicy } from "./fixture/policy"
@@ -189,7 +189,7 @@ function resourceServer(
             state.toolCalls.push({
               name: request.params.name,
               arguments: request.params.arguments,
-              sessionID: request.params._meta?.["ai.opencode/sessionID"],
+              sessionID: request.params._meta?.["ai.openbnk/sessionID"],
               progressToken: request.params._meta?.progressToken,
             })
             return Promise.resolve({ content: [] })
@@ -1386,7 +1386,7 @@ it.live("discovers and reads MCP resources through Code Mode", () =>
         })
 
       // The SDK walks every page, so one call returns the full catalog.
-      const listed = yield* run('return await tools.opencode.list_mcp_resources({ server: "resources" })')
+      const listed = yield* run('return await tools.openbnk.list_mcp_resources({ server: "resources" })')
       expect(JSON.parse(listed.output.output)).toEqual({
         resources: [
           { server: "resources", name: "Guide", uri: "docs://guide" },
@@ -1401,9 +1401,9 @@ it.live("discovers and reads MCP resources through Code Mode", () =>
 
       // Omitting the server lists every server, so the model can find which one owns a URI.
       assertion = yield* Deferred.make<Permission.AssertInput>()
-      const everywhere = yield* run("return await tools.opencode.list_mcp_resources({})")
+      const everywhere = yield* run("return await tools.openbnk.list_mcp_resources({})")
       expect(yield* Deferred.await(assertion)).toMatchObject({
-        action: "opencode_list_mcp_resources",
+        action: "openbnk_list_mcp_resources",
         resources: ["resources"],
         save: ["resources"],
       })
@@ -1420,7 +1420,7 @@ it.live("discovers and reads MCP resources through Code Mode", () =>
 
       // A server may declare resources without implementing template listing.
       server.state.templatesUnsupported = true
-      const untemplated = yield* run('return await tools.opencode.list_mcp_resources({ server: "resources" })')
+      const untemplated = yield* run('return await tools.openbnk.list_mcp_resources({ server: "resources" })')
       expect(JSON.parse(untemplated.output.output)).toEqual({
         resources: [
           { server: "resources", name: "Guide", uri: "docs://guide" },
@@ -1432,7 +1432,7 @@ it.live("discovers and reads MCP resources through Code Mode", () =>
 
       assertion = yield* Deferred.make<Permission.AssertInput>()
       const read = yield* run(
-        'const resource = await tools.opencode.read_mcp_resource({ server: "resources", uri: "docs://readme" }); return resource.contents.filter(part => part.type === "text").map(part => part.text).join("\\n")',
+        'const resource = await tools.openbnk.read_mcp_resource({ server: "resources", uri: "docs://readme" }); return resource.contents.filter(part => part.type === "text").map(part => part.text).join("\\n")',
       )
       expect(read.content).toEqual([
         { type: "text", text: "hello" },
@@ -1440,14 +1440,14 @@ it.live("discovers and reads MCP resources through Code Mode", () =>
       ])
       expect(read.metadata?.toolCalls).toMatchObject([
         {
-          tool: "opencode.read_mcp_resource",
+          tool: "openbnk.read_mcp_resource",
           status: "completed",
           input: { server: "resources", uri: "docs://readme" },
         },
       ])
       expect(server.state.resourceReads).toEqual(["docs://readme"])
       expect(yield* Deferred.await(assertion)).toEqual({
-        action: "opencode_read_mcp_resource",
+        action: "openbnk_read_mcp_resource",
         resources: ["resources:docs://readme"],
         save: ["resources:*"],
         metadata: { server: "resources", uri: "docs://readme" },
@@ -1458,7 +1458,7 @@ it.live("discovers and reads MCP resources through Code Mode", () =>
 
       server.state.contents = [{ uri: "docs://readme", text: "line\n".repeat(20_000), mimeType: "text/plain" }]
       const large = yield* run(
-        'const resource = await tools.opencode.read_mcp_resource({ server: "resources", uri: "docs://readme" }); return resource.contents[0].text',
+        'const resource = await tools.openbnk.read_mcp_resource({ server: "resources", uri: "docs://readme" }); return resource.contents[0].text',
       )
       const bounded = yield* ToolOutput.Service.use((output) => output.truncate(large)).pipe(
         Effect.provide(AppNodeBuilder.build(ToolOutput.node)),
@@ -1473,29 +1473,29 @@ it.live("discovers and reads MCP resources through Code Mode", () =>
       // An empty contents array means the resource exists without content, not that it is missing.
       server.state.contents = []
       const empty = yield* run(
-        'return await tools.opencode.read_mcp_resource({ server: "resources", uri: "docs://empty" })',
+        'return await tools.openbnk.read_mcp_resource({ server: "resources", uri: "docs://empty" })',
       )
       expect(empty.metadata?.error).toBeUndefined()
       expect(JSON.parse(empty.output.output)).toEqual({ server: "resources", uri: "docs://empty", contents: [] })
       server.state.missing = ["docs://gone"]
       const gone = yield* run(
-        'return await tools.opencode.read_mcp_resource({ server: "resources", uri: "docs://gone" })',
+        'return await tools.openbnk.read_mcp_resource({ server: "resources", uri: "docs://gone" })',
       )
       expect(gone.metadata?.error).toBe(true)
       expect(gone.output.output).toContain("Unable to read MCP resource resources:docs://gone")
       expect(gone.output.output).toContain("Resource not found")
       const missing = yield* run(
-        'return await tools.opencode.read_mcp_resource({ server: "missing", uri: "docs://readme" })',
+        'return await tools.openbnk.read_mcp_resource({ server: "missing", uri: "docs://readme" })',
       )
       expect(missing.metadata?.error).toBe(true)
       expect(missing.output.output).toContain("MCP server not found: missing")
 
       const reads = server.state.resourceReads.length
       decision = Effect.fail(
-        new Permission.BlockedError({ rules: [], permission: "opencode_read_mcp_resource", resources: ["*"] }),
+        new Permission.BlockedError({ rules: [], permission: "openbnk_read_mcp_resource", resources: ["*"] }),
       )
       const denied = yield* run(
-        'return await tools.opencode.read_mcp_resource({ server: "resources", uri: "docs://denied" })',
+        'return await tools.openbnk.read_mcp_resource({ server: "resources", uri: "docs://denied" })',
       )
       expect(denied.metadata?.error).toBe(true)
       expect(server.state.resourceReads).toHaveLength(reads)

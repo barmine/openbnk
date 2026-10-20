@@ -1,3 +1,3 @@
-# @opencode/core
+# @openbnk/core
 
-Core runtime services for OpenCode.
+Core runtime services for OpenBnk.

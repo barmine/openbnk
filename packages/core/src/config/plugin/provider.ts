@@ -1,9 +1,9 @@
 export * as ConfigProviderPlugin from "./provider.js"
 
-import { define } from "@opencode/plugin/effect/plugin"
-import { Document, type Entry } from "@opencode/schema/config"
-import { ConfigProvider } from "@opencode/schema/config/provider"
-import { Money } from "@opencode/schema/money"
+import { define } from "@openbnk/plugin/effect/plugin"
+import { Document, type Entry } from "@openbnk/schema/config"
+import { ConfigProvider } from "@openbnk/schema/config/provider"
+import { Money } from "@openbnk/schema/money"
 import { Effect } from "effect"
 import { Config } from "../../config.js"
 import { Model } from "../../model.js"
@@ -12,7 +12,7 @@ import { Variant } from "../../variant.js"
 import { ConfigEntryObserver } from "./entry-observer.js"
 
 export const Plugin = define({
-  id: "opencode.config.provider",
+  id: "openbnk.config.provider",
   effect: Effect.fn(function* (ctx) {
     const config = yield* Config.Service
     const loaded = yield* ConfigEntryObserver.observe(

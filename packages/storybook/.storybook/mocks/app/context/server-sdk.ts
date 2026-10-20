@@ -1,6 +1,6 @@
 const providers = [
-  "opencode-go",
-  "opencode",
+  "openbnk-go",
+  "openbnk",
   "anthropic",
   "openai",
   "google",

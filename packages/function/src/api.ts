@@ -69,7 +69,7 @@ export default new Hono()
    * Used by the GitHub action to get GitHub installation access token given the OIDC token
    */
   .post("/exchange_github_app_token", async (c) => {
-    const EXPECTED_AUDIENCE = "opencode-github-action"
+    const EXPECTED_AUDIENCE = "openbnk-github-action"
     const GITHUB_ISSUER = "https://token.actions.githubusercontent.com"
     const JWKS_URL = `${GITHUB_ISSUER}/.well-known/jwks`
 
@@ -116,7 +116,7 @@ export default new Hono()
     }
   })
   /**
-   * Used by the GitHub action to get GitHub installation access token given user PAT token (used when testing `opencode github run` locally)
+   * Used by the GitHub action to get GitHub installation access token given user PAT token (used when testing `openbnk github run` locally)
    */
   .post("/exchange_github_app_token_with_pat", async (c) => {
     const body = await c.req.json<{ owner: string; repo: string }>()

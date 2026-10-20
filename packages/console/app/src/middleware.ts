@@ -38,7 +38,7 @@ export default createMiddleware({
     if (/^\/(auth|workspace)(\/|$)/.test(url.pathname))
       return new Response(null, {
         status: 302,
-        headers: { Location: "https://opencode.ai/console/login", "Cache-Control": "no-store" },
+        headers: { Location: "https://openbnk.local/console/login", "Cache-Control": "no-store" },
       })
   },
 })

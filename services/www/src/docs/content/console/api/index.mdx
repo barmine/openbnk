@@ -1,20 +1,20 @@
 ---
 title: "API Overview"
-description: "Authenticate with the OpenCode Console API using personal API keys or service account keys, and scope what each key can do."
+description: "Authenticate with the OpenBnk Console API using personal API keys or service account keys, and scope what each key can do."
 ---
 
 The Console API lets your scripts and integrations call models and manage budgets. Every request authenticates with
 an API key.
 
 ```bash
-curl --fail-with-body "https://opencode.ai/console/api/v1/budgets/members" \
+curl --fail-with-body "https://openbnk.local/console/api/v1/budgets/members" \
   --header "Authorization: Bearer oc_sk_..."
 ```
 
 | API                                 | Endpoints                                  |
 | ----------------------------------- | ------------------------------------------ |
-| [Inference](/console/api/inference) | `https://opencode.ai/inference/...`        |
-| [Providers](/console/api/providers) | `https://opencode.ai/inference/custom/...` |
+| [Inference](/console/api/inference) | `https://openbnk.local/inference/...`        |
+| [Providers](/console/api/providers) | `https://openbnk.local/inference/custom/...` |
 | [Budgets](/console/api/budgets)     | `/api/v1/budgets/members`                  |
 
 ## API keys

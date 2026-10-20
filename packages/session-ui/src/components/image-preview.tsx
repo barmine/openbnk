@@ -1,6 +1,6 @@
-import { useDialog } from "@opencode/ui/context/dialog"
-import { useI18n } from "@opencode/ui/context/i18n"
-import { ImagePreview } from "@opencode/ui/image-preview"
+import { useDialog } from "@openbnk/ui/context/dialog"
+import { useI18n } from "@openbnk/ui/context/i18n"
+import { ImagePreview } from "@openbnk/ui/image-preview"
 
 export function createImagePreview() {
   const dialog = useDialog()

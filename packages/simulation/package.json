@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/simulation",
+  "name": "@openbnk/simulation",
   "version": "2.1.1",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/anomalyco/openbnk.git",
     "directory": "packages/simulation"
   },
   "publishConfig": {
@@ -29,11 +29,11 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@opencode/core": "workspace:*",
-    "@opencode/ai": "workspace:*",
-    "@opencode/plugin": "workspace:*",
-    "@opencode/protocol": "workspace:*",
-    "@opencode/util": "workspace:*",
+    "@openbnk/core": "workspace:*",
+    "@openbnk/ai": "workspace:*",
+    "@openbnk/plugin": "workspace:*",
+    "@openbnk/protocol": "workspace:*",
+    "@openbnk/util": "workspace:*",
     "@opentui/core": "catalog:",
     "effect": "catalog:",
     "ws": "8.21.0"

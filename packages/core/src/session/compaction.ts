@@ -13,11 +13,11 @@ import {
   type ToolEntry,
   UnknownProviderError,
   type Usage,
-} from "@opencode/ai"
-import type { StreamOptions } from "@opencode/ai/route"
-import type { SessionCompactionResult } from "@opencode/plugin/effect/session"
-import type { SessionError } from "@opencode/schema/session-error"
-import { makeLocationNode } from "@opencode/util/effect/app-node"
+} from "@openbnk/ai"
+import type { StreamOptions } from "@openbnk/ai/route"
+import type { SessionCompactionResult } from "@openbnk/plugin/effect/session"
+import type { SessionError } from "@openbnk/schema/session-error"
+import { makeLocationNode } from "@openbnk/util/effect/app-node"
 import { Context, Effect, Layer, Result, Stream } from "effect"
 import { Agent } from "../agent.js"
 import { Bus } from "../bus.js"
@@ -66,7 +66,7 @@ export interface Interface extends State.Transformable<Editor> {
   readonly compact: (trigger: Trigger) => Effect.Effect<Outcome>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/SessionCompaction") {}
+export class Service extends Context.Service<Service, Interface>()("@openbnk/SessionCompaction") {}
 
 /**
  * A summary fills `text`, and references the messages it keeps verbatim with `metadata.keepID`; history

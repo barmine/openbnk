@@ -1,13 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/plugin-browser",
+  "name": "@openbnk/plugin-browser",
   "version": "2.1.1",
-  "description": "OpenCode's desktop browser plugin",
+  "description": "OpenBnk's desktop browser plugin",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/anomalyco/openbnk.git",
     "directory": "packages/plugin-browser"
   },
   "publishConfig": {
@@ -27,8 +27,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@opencode/plugin": "workspace:*",
-    "@opencode/schema": "workspace:*",
+    "@openbnk/plugin": "workspace:*",
+    "@openbnk/schema": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

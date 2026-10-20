@@ -8,28 +8,28 @@
     ".github/workflows/test.yml",
     "package.json"
   ],
-  "globalEnv": ["CI", "OPENCODE_DISABLE_SHARE"],
-  "globalPassThroughEnv": ["CI", "OPENCODE_DISABLE_SHARE"],
+  "globalEnv": ["CI", "OPENBNK_DISABLE_SHARE"],
+  "globalPassThroughEnv": ["CI", "OPENBNK_DISABLE_SHARE"],
   "tasks": {
     "typecheck": {},
-    "@opencode/cli#typecheck": {
-      "dependsOn": ["@opencode/core#typecheck"]
+    "@openbnk/cli#typecheck": {
+      "dependsOn": ["@openbnk/core#typecheck"]
     },
     "test:components": {
       "outputs": [],
       "cache": false
     },
-    "@opencode/sdk#typecheck": {
-      "dependsOn": ["@opencode/core#typecheck"]
+    "@openbnk/sdk#typecheck": {
+      "dependsOn": ["@openbnk/core#typecheck"]
     },
-    "@opencode/server#typecheck": {
-      "dependsOn": ["@opencode/core#typecheck"]
+    "@openbnk/server#typecheck": {
+      "dependsOn": ["@openbnk/core#typecheck"]
     },
-    "@opencode/simulation#typecheck": {
-      "dependsOn": ["@opencode/core#typecheck"]
+    "@openbnk/simulation#typecheck": {
+      "dependsOn": ["@openbnk/core#typecheck"]
     },
-    "@opencode/tui#typecheck": {
-      "dependsOn": ["@opencode/core#typecheck"]
+    "@openbnk/tui#typecheck": {
+      "dependsOn": ["@openbnk/core#typecheck"]
     },
     "build": {
       "dependsOn": ["transit"],
@@ -46,11 +46,11 @@
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode/desktop#test": {
+    "@openbnk/desktop#test": {
       "outputs": [],
       "cache": false
     },
-    "@opencode/sdk#verify:package": {
+    "@openbnk/sdk#verify:package": {
       "outputs": []
     }
   }

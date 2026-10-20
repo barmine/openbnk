@@ -54,40 +54,40 @@ export default function Download() {
             <div data-component="section-content">
               <button
                 data-component="cli-row"
-                onClick={handleCopyClick("curl -fsSL https://opencode.ai/v2/install | bash")}
+                onClick={handleCopyClick("curl -fsSL https://openbnk.local/v2/install | bash")}
               >
                 <code>
-                  curl -fsSL https://<strong>opencode.ai/v2/install</strong> | bash
+                  curl -fsSL https://<strong>openbnk.local/v2/install</strong> | bash
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("npm install -g @opencode/cli")}>
+              <button data-component="cli-row" onClick={handleCopyClick("npm install -g @openbnk/cli")}>
                 <code>
-                  npm install -g <strong>@opencode/cli</strong>
+                  npm install -g <strong>@openbnk/cli</strong>
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("bun install -g --trust @opencode/cli")}>
+              <button data-component="cli-row" onClick={handleCopyClick("bun install -g --trust @openbnk/cli")}>
                 <code>
-                  bun install -g --trust <strong>@opencode/cli</strong>
+                  bun install -g --trust <strong>@openbnk/cli</strong>
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("brew install anomalyco/tap/opencode-v2")}>
+              <button data-component="cli-row" onClick={handleCopyClick("brew install anomalyco/tap/openbnk-v2")}>
                 <code>
-                  brew install <strong>anomalyco/tap/opencode-v2</strong>
+                  brew install <strong>anomalyco/tap/openbnk-v2</strong>
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("paru -S opencode-beta")}>
+              <button data-component="cli-row" onClick={handleCopyClick("paru -S openbnk-beta")}>
                 <code>
-                  paru -S <strong>opencode-beta</strong>
+                  paru -S <strong>openbnk-beta</strong>
                 </code>
                 <CopyStatus />
               </button>
-              <button data-component="cli-row" onClick={handleCopyClick("yay -S opencode-beta")}>
+              <button data-component="cli-row" onClick={handleCopyClick("yay -S openbnk-beta")}>
                 <code>
-                  yay -S <strong>opencode-beta</strong>
+                  yay -S <strong>openbnk-beta</strong>
                 </code>
                 <CopyStatus />
               </button>
@@ -99,9 +99,9 @@ export default function Download() {
               <span>[2]</span> {i18n.t("download.section.desktop")}
             </div>
             <div data-component="section-content">
-              <button data-component="cli-row" onClick={handleCopyClick("brew install --cask opencode-desktop")}>
+              <button data-component="cli-row" onClick={handleCopyClick("brew install --cask openbnk-desktop")}>
                 <code>
-                  brew install --cask <strong>opencode-desktop</strong>
+                  brew install --cask <strong>openbnk-desktop</strong>
                 </code>
                 <CopyStatus />
               </button>

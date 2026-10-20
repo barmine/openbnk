@@ -6,7 +6,7 @@ import {
   PositiveInt,
   RelativePath,
   statics,
-} from "@opencode/schema/schema"
+} from "@openbnk/schema/schema"
 
 export { AbsolutePath, DateTimeUtcFromMillis, NonNegativeInt, optional, PositiveInt, RelativePath, statics }
 

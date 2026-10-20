@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
-import { KV } from "@opencode/core/kv"
-import { LayerNode } from "@opencode/util/effect/layer-node"
+import { KV } from "@openbnk/core/kv"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(KV.node))

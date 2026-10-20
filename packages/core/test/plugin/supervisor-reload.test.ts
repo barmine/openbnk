@@ -3,24 +3,24 @@ import fs from "fs/promises"
 import path from "path"
 import { Deferred, Duration, Effect, Fiber, Layer, LayerMap, Schedule } from "effect"
 import { TestClock } from "effect/testing"
-import { define } from "@opencode/plugin/effect/plugin"
-import { Event } from "@opencode/schema/config"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Global } from "@opencode/util/global"
-import { Npm } from "@opencode/util/npm"
-import { Bus } from "@opencode/core/bus"
-import { Command } from "@opencode/core/command"
-import { Database } from "@opencode/core/database/database"
-import { Watcher } from "@opencode/core/filesystem/watcher"
-import { ManagedPolicy } from "@opencode/core/managed-policy"
-import { Instance } from "@opencode/core/instance"
-import { LocationServiceMap } from "@opencode/core/location-services"
-import { Location } from "@opencode/core/location"
-import { Plugin } from "@opencode/core/plugin"
-import { Rpc } from "@opencode/core/rpc"
-import { SdkPlugins } from "@opencode/core/plugin/sdk"
-import { AbsolutePath } from "@opencode/core/schema"
+import { define } from "@openbnk/plugin/effect/plugin"
+import { Event } from "@openbnk/schema/config"
+import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
+import { Global } from "@openbnk/util/global"
+import { Npm } from "@openbnk/util/npm"
+import { Bus } from "@openbnk/core/bus"
+import { Command } from "@openbnk/core/command"
+import { Database } from "@openbnk/core/database/database"
+import { Watcher } from "@openbnk/core/filesystem/watcher"
+import { ManagedPolicy } from "@openbnk/core/managed-policy"
+import { Instance } from "@openbnk/core/instance"
+import { LocationServiceMap } from "@openbnk/core/location-services"
+import { Location } from "@openbnk/core/location"
+import { Plugin } from "@openbnk/core/plugin"
+import { Rpc } from "@openbnk/core/rpc"
+import { SdkPlugins } from "@openbnk/core/plugin/sdk"
+import { AbsolutePath } from "@openbnk/core/schema"
 import { tempGlobalLayer } from "../fixture/global"
 import { offlineModels } from "../fixture/models"
 import { tmpdirScoped } from "../fixture/tmpdir"
@@ -144,7 +144,7 @@ describe("PluginSupervisor reload", () => {
         yield* Effect.promise(async () => {
           await Bun.write(file, entry)
           await Bun.write(helper, source(1))
-          await Bun.write(path.join(directory.path, ".opencode/opencode.json"), JSON.stringify({ plugins: [root] }))
+          await Bun.write(path.join(directory.path, ".openbnk/openbnk.json"), JSON.stringify({ plugins: [root] }))
         })
         const watcher = yield* Watcher.Test
         const locations = yield* LocationServiceMap.Service
@@ -199,14 +199,14 @@ describe("PluginSupervisor reload", () => {
         const directory = yield* tmpdirScoped()
         const file = path.join(
           directory.path,
-          mode === "discovered" ? ".opencode/plugins/greeter.ts" : "external/greeter/index.ts",
+          mode === "discovered" ? ".openbnk/plugins/greeter.ts" : "external/greeter/index.ts",
         )
         yield* Effect.promise(async () => {
           await Bun.write(file, greeter("greet-v1"))
           await fs.utimes(file, new Date(0), new Date(0))
           if (mode === "configured") {
             await Bun.write(
-              path.join(directory.path, ".opencode/opencode.json"),
+              path.join(directory.path, ".openbnk/openbnk.json"),
               JSON.stringify({ plugins: [path.dirname(file)] }),
             )
           }
@@ -251,7 +251,7 @@ describe("PluginSupervisor reload", () => {
   it.live("keeps the running generation when an updated local plugin fails to import", () =>
     Effect.gen(function* () {
       const directory = yield* tmpdirScoped()
-      const file = path.join(directory.path, ".opencode/plugins/greeter.ts")
+      const file = path.join(directory.path, ".openbnk/plugins/greeter.ts")
       // Local plugin revisions key on mtime, so give each rewrite a distinct timestamp.
       const write = (content: string, mtime: Date) =>
         Effect.promise(async () => {
@@ -302,7 +302,7 @@ describe("PluginSupervisor reload", () => {
       )
       yield* Effect.promise(() => Bun.write(path.join(npm.directory, "server.ts"), greeter("greet-pkg")))
       yield* Effect.promise(() =>
-        Bun.write(path.join(directory.path, ".opencode/opencode.json"), JSON.stringify({ plugins: ["fixture-pkg"] })),
+        Bun.write(path.join(directory.path, ".openbnk/openbnk.json"), JSON.stringify({ plugins: ["fixture-pkg"] })),
       )
       const bus = yield* Bus.Service
       const locations = yield* LocationServiceMap.Service
@@ -345,7 +345,7 @@ it.live("applies organization integration changes to running external plugins", 
     const directory = yield* tmpdirScoped()
     const root = path.join(directory.path, "external/policy-fixture")
     const entered = path.join(directory.path, "entered")
-    const configuration = path.join(directory.path, ".opencode/opencode.json")
+    const configuration = path.join(directory.path, ".openbnk/openbnk.json")
     yield* Effect.promise(async () => {
       await Bun.write(
         path.join(root, "index.ts"),

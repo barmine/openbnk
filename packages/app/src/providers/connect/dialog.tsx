@@ -1,14 +1,14 @@
-import { Button } from "@opencode/ui/button"
-import { Badge } from "@opencode/ui/badge"
-import { useDialog } from "@opencode/ui/context/dialog"
-import { Icon } from "@opencode/ui/icon"
-import { List } from "@opencode/ui/list"
-import { RadioGroup, RadioItem } from "@opencode/ui/radio"
-import { Loader } from "@opencode/ui/loader"
-import { Spinner } from "@opencode/ui/spinner"
-import { TextField } from "@opencode/ui/text-field"
-import { DialogBody, DialogHeader, DialogTitle, Dialog } from "@opencode/ui/dialog"
-import { TextInput } from "@opencode/ui/text-input"
+import { Button } from "@openbnk/ui/button"
+import { Badge } from "@openbnk/ui/badge"
+import { useDialog } from "@openbnk/ui/context/dialog"
+import { Icon } from "@openbnk/ui/icon"
+import { List } from "@openbnk/ui/list"
+import { RadioGroup, RadioItem } from "@openbnk/ui/radio"
+import { Loader } from "@openbnk/ui/loader"
+import { Spinner } from "@openbnk/ui/spinner"
+import { TextField } from "@openbnk/ui/text-field"
+import { DialogBody, DialogHeader, DialogTitle, Dialog } from "@openbnk/ui/dialog"
+import { TextInput } from "@openbnk/ui/text-input"
 import { showToast } from "@/shell/notifications/toast"
 import {
   type Component,
@@ -55,8 +55,8 @@ import { authServerName, RemoteAuthNotice } from "./remote"
 import { providerAccounts, type ProviderAccount } from "@/settings/providers/accounts"
 import { AccountNameInput } from "@/settings/providers/account-name"
 import { useProviderAccountActions } from "@/settings/providers/account-actions"
-import { IconButton } from "@opencode/ui/icon-button"
-import { Menu } from "@opencode/ui/menu"
+import { IconButton } from "@openbnk/ui/icon-button"
+import { Menu } from "@openbnk/ui/menu"
 import "./models.css"
 
 const CUSTOM_ID = "_custom"
@@ -237,7 +237,7 @@ function ProviderPicker(props: { directory?: string; onSelect: (provider: string
     filter: "",
   })
 
-  const featured = ["opencode-go", "opencode", "anthropic", "openai", "google", "openrouter", "vercel"]
+  const featured = ["openbnk-go", "openbnk", "anthropic", "openai", "google", "openrouter", "vercel"]
   const custom = () => ({ id: CUSTOM_ID, name: language.t("dialog.provider.custom.label") })
 
   const all = createMemo(() => {
@@ -364,9 +364,9 @@ function ProviderPicker(props: { directory?: string; onSelect: (provider: string
                         <Show when={CONSOLE_PROVIDERS.has(provider.id) && accountCount(provider) === 0}>
                           <span class="min-w-0 truncate font-[440] text-v2-text-text-muted">
                             {language.t(
-                              provider.id === "opencode"
-                                ? "dialog.provider.opencode.tagline"
-                                : "dialog.provider.opencodeGo.tagline",
+                              provider.id === "openbnk"
+                                ? "dialog.provider.openbnk.tagline"
+                                : "dialog.provider.openbnkGo.tagline",
                             )}
                           </span>
                           <span class="flex h-4 shrink-0 items-center rounded-xs border-[0.5px] border-v2-border-border-base bg-v2-background-bg-layer-03 px-1 text-[11px] font-[530] leading-none tracking-[0.05px] text-v2-text-text-muted">
@@ -475,7 +475,7 @@ function ProviderConnection(props: {
 
   const controller = createProviderConnectionController({
     provider: () => integrationID,
-    // A Go service-account key still belongs to the `opencode-go` integration (zen/go/v1),
+    // A Go service-account key still belongs to the `openbnk-go` integration (zen/go/v1),
     // exactly as before; only the sign-in is shared with the Console.
     keyProvider: () => props.provider,
     directory,
@@ -562,7 +562,7 @@ function ProviderConnection(props: {
     if (controller.currentMethod()?.type === "key") return active()
 
     const loaded = () =>
-      managedProviders() !== undefined || connectionProviders().some((provider) => provider.id !== "opencode")
+      managedProviders() !== undefined || connectionProviders().some((provider) => provider.id !== "openbnk")
 
     const deadline = Date.now() + 10_000
 
@@ -1175,7 +1175,7 @@ function ProviderConnection(props: {
 
     // Go signs in through the Console, which would add a Console account, so Go adds a key instead.
     const index =
-      props.provider === "opencode-go" ? keyIndex() : !isConsole && controller.methods().length === 1 ? 0 : -1
+      props.provider === "openbnk-go" ? keyIndex() : !isConsole && controller.methods().length === 1 ? 0 : -1
 
     if (index === -1) return
     setState("direct", true)
@@ -1350,7 +1350,7 @@ function ProviderConnection(props: {
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <Show when={!state.catalogPending}>
-            <Button onClick={() => platform.openExternal("https://opencode.ai/console")}>
+            <Button onClick={() => platform.openExternal("https://openbnk.local/console")}>
               {language.t("provider.connect.console.openAgain")}
             </Button>
           </Show>
@@ -1529,11 +1529,11 @@ function ProviderConnection(props: {
               <Switch>
                 <Match when={showAccounts()}>{provider().name}</Match>
                 <Match when={isConsole && controller.auth.state() === "error"}>
-                  {language.t("provider.connect.opencode.errorTitle")}
+                  {language.t("provider.connect.openbnk.errorTitle")}
                 </Match>
                 <Match when={consoleSignIn()}>
                   {language.t(
-                    props.provider === "opencode-go"
+                    props.provider === "openbnk-go"
                       ? "provider.connect.console.titleGo"
                       : "provider.connect.console.title",
                   )}
@@ -1545,8 +1545,8 @@ function ProviderConnection(props: {
                 >
                   {language.t("provider.connect.title.anthropicProMax")}
                 </Match>
-                <Match when={props.provider === "opencode"}>
-                  {language.t("provider.connect.title", { provider: language.t("provider.connect.opencode.name") })}
+                <Match when={props.provider === "openbnk"}>
+                  {language.t("provider.connect.title", { provider: language.t("provider.connect.openbnk.name") })}
                 </Match>
                 <Match when={true}>{language.t("provider.connect.title", { provider: provider().name })}</Match>
               </Switch>

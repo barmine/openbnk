@@ -2,36 +2,36 @@
 
 export * as SkillPlugin from "./skill.js"
 
-import { define, type Context } from "@opencode/plugin/effect/plugin"
-import { Document } from "@opencode/schema/config"
+import { define, type Context } from "@openbnk/plugin/effect/plugin"
+import { Document } from "@openbnk/schema/config"
 import { Effect } from "effect"
 import { AbsolutePath } from "../schema.js"
 import { Skill } from "../skill.js"
 import { Config } from "../config.js"
 import os from "os"
-import opencodeContent from "./skill/opencode.md" with { type: "text" }
+import openbnkContent from "./skill/openbnk.md" with { type: "text" }
 import reportContent from "./skill/report.md" with { type: "text" }
 
-export const OpencodeContent = opencodeContent
+export const OpenbnkContent = openbnkContent
 export const ReportContent = reportContent
 
-export const OpencodeDescription =
-  "Use this skill for any question about OpenCode itself, including how OpenCode works, using or configuring it, migrating from V1 to V2, troubleshooting it, developing plugins or integrations, using the OpenCode SDK, clients, server, or API, and contributing to the OpenCode codebase. Also use it for OpenCode agents, commands, skills, tools, permissions, MCP servers, providers, models, themes, keybinds, formatters, the CLI, TUI, desktop app, and web app."
+export const OpenbnkDescription =
+  "Use this skill for any question about OpenBnk itself, including how OpenBnk works, using or configuring it, migrating from V1 to V2, troubleshooting it, developing plugins or integrations, using the OpenBnk SDK, clients, server, or API, and contributing to the OpenBnk codebase. Also use it for OpenBnk agents, commands, skills, tools, permissions, MCP servers, providers, models, themes, keybinds, formatters, the CLI, TUI, desktop app, and web app."
 const REPORT_DESCRIPTION =
-  "Use when the user wants to report an opencode issue or bug. Collect standard diagnostics, add user-specific reproduction context, and publish the issue with GitHub CLI."
+  "Use when the user wants to report an openbnk issue or bug. Collect standard diagnostics, add user-specific reproduction context, and publish the issue with GitHub CLI."
 
 export const Plugin = define({
-  id: "opencode.skill",
+  id: "openbnk.skill",
   effect: Effect.fn(function* (ctx) {
     const reportContent = yield* reportContentWithDiagnostics(ctx.app)
     yield* ctx.skill.transform((editor) => {
       editor.add(
         Skill.Info.make({
-          id: Skill.ID.make("opencode"),
-          name: Skill.Name.make("OpenCode"),
-          description: OpencodeDescription,
-          path: AbsolutePath.make("/builtin/opencode.md"),
-          content: OpencodeContent,
+          id: Skill.ID.make("openbnk"),
+          name: Skill.Name.make("OpenBnk"),
+          description: OpenbnkDescription,
+          path: AbsolutePath.make("/builtin/openbnk.md"),
+          content: OpenbnkContent,
         }),
       )
       editor.add(
@@ -61,7 +61,7 @@ const reportContentWithDiagnostics = Effect.fn("SkillPlugin.reportContentWithDia
     "",
     "These values were captured when the built-in report skill was registered. Verify them before publishing.",
     "",
-    `- opencode version: ${app.version}`,
+    `- openbnk version: ${app.version}`,
     `- install/channel: ${app.channel}`,
     `- OS: ${os.type()} ${os.release()} (${os.platform()} ${os.arch()}${emulated ? ", emulated on ARM64" : ""})`,
     `- Terminal: ${terminal()}`,

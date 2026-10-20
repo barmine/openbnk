@@ -1,7 +1,7 @@
 export * as TodoTool from "./todo.js"
 
-import { ToolFailure } from "@opencode/ai"
-import type { Context } from "@opencode/plugin/effect/plugin"
+import { ToolFailure } from "@openbnk/ai"
+import type { Context } from "@openbnk/plugin/effect/plugin"
 import { Effect, Schema } from "effect"
 import { Config } from "../../config.js"
 import { ConfigEntryObserver } from "../../config/plugin/entry-observer.js"
@@ -41,7 +41,7 @@ export const summarize = (todos: ReadonlyArray<Info>) => {
 }
 
 export const Plugin = {
-  id: "opencode.tool.todo",
+  id: "openbnk.tool.todo",
   effect: Effect.fn("TodoTool.Plugin")(function* (ctx: Context) {
     const config = yield* Config.Service
     const permission = yield* Permission.Service

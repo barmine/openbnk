@@ -1,37 +1,37 @@
-import { Database } from "@opencode/core/database/database"
-import { V1Migration } from "@opencode/core/database/v1-migration"
-import { App } from "@opencode/core/app"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Node } from "@opencode/util/effect/app-node"
-import { httpClient } from "@opencode/util/effect/app-node-platform"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { Bus } from "@opencode/core/bus"
-import { EventLogger } from "@opencode/core/event-logger"
-import { FileSystemSearch } from "@opencode/core/filesystem/search"
-import { Credential } from "@opencode/core/credential"
-import { Config } from "@opencode/core/config"
-import { PermissionSaved } from "@opencode/core/permission/saved"
-import { PtyTicket } from "@opencode/core/pty/ticket"
-import { PersistentPty } from "@opencode/core/persistent-pty"
-import { Project } from "@opencode/core/project"
-import { Worktree } from "@opencode/core/worktree"
-import { Session } from "@opencode/core/session"
-import { Instance } from "@opencode/core/instance/service"
-import { SessionTransfer } from "@opencode/core/session/transfer"
-import { ShellSelect } from "@opencode/core/shell/select"
-import { Job } from "@opencode/core/job"
-import { Mcp } from "@opencode/core/mcp/index"
-import { Global } from "@opencode/util/global"
-import { InstructionDiscovery } from "@opencode/core/instruction-discovery"
-import { LocationServiceMap } from "@opencode/core/location-service-map"
-import { LocationActivity } from "@opencode/core/location-activity"
-import { ModelsDev } from "@opencode/core/models-dev"
-import { SessionRestart } from "@opencode/core/session/execution/restart"
-import { PluginUpdate } from "@opencode/core/plugin/update"
-import { SdkPlugins } from "@opencode/core/plugin/sdk"
-import { WellKnown } from "@opencode/core/wellknown"
-import { Workspace } from "@opencode/core/workspace"
-import { Watcher } from "@opencode/core/filesystem/watcher"
+import { Database } from "@openbnk/core/database/database"
+import { V1Migration } from "@openbnk/core/database/v1-migration"
+import { App } from "@openbnk/core/app"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
+import { Node } from "@openbnk/util/effect/app-node"
+import { httpClient } from "@openbnk/util/effect/app-node-platform"
+import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
+import { Bus } from "@openbnk/core/bus"
+import { EventLogger } from "@openbnk/core/event-logger"
+import { FileSystemSearch } from "@openbnk/core/filesystem/search"
+import { Credential } from "@openbnk/core/credential"
+import { Config } from "@openbnk/core/config"
+import { PermissionSaved } from "@openbnk/core/permission/saved"
+import { PtyTicket } from "@openbnk/core/pty/ticket"
+import { PersistentPty } from "@openbnk/core/persistent-pty"
+import { Project } from "@openbnk/core/project"
+import { Worktree } from "@openbnk/core/worktree"
+import { Session } from "@openbnk/core/session"
+import { Instance } from "@openbnk/core/instance/service"
+import { SessionTransfer } from "@openbnk/core/session/transfer"
+import { ShellSelect } from "@openbnk/core/shell/select"
+import { Job } from "@openbnk/core/job"
+import { Mcp } from "@openbnk/core/mcp/index"
+import { Global } from "@openbnk/util/global"
+import { InstructionDiscovery } from "@openbnk/core/instruction-discovery"
+import { LocationServiceMap } from "@openbnk/core/location-service-map"
+import { LocationActivity } from "@openbnk/core/location-activity"
+import { ModelsDev } from "@openbnk/core/models-dev"
+import { SessionRestart } from "@openbnk/core/session/execution/restart"
+import { PluginUpdate } from "@openbnk/core/plugin/update"
+import { SdkPlugins } from "@openbnk/core/plugin/sdk"
+import { WellKnown } from "@openbnk/core/wellknown"
+import { Workspace } from "@openbnk/core/workspace"
+import { Watcher } from "@openbnk/core/filesystem/watcher"
 import { HttpRouter } from "effect/http"
 import { HttpApiBuilder } from "effect/http-api"
 import { Context, Effect, Layer, Option } from "effect"
@@ -135,7 +135,7 @@ function makeRoutes<AuthError, AuthServices>(
     Mcp.node.replace(
       Mcp.configured({
         clientInfo: {
-          name: "opencode",
+          name: "openbnk",
           version: options.app?.version ?? "unknown",
         },
       }),
@@ -153,7 +153,7 @@ function makeRoutes<AuthError, AuthServices>(
   const serviceLayer = options.simulation
     ? Layer.unwrap(
         Effect.gen(function* () {
-          const { simulationReplacements } = yield* Effect.promise(() => import("@opencode/simulation/backend"))
+          const { simulationReplacements } = yield* Effect.promise(() => import("@openbnk/simulation/backend"))
           const simulation = yield* simulationReplacements({ version: App.make(options.app).version })
           return build([...overrides, ...simulation])
         }),

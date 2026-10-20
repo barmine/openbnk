@@ -10,17 +10,17 @@ import {
   QuotaExceededError,
   RateLimitError,
   TransportError,
-} from "@opencode/ai"
-import { RequestExecutor } from "@opencode/ai/route"
-import { OpenAIChat } from "@opencode/ai/protocols"
-import { TestLLM } from "@opencode/ai/testing"
-import { AISDK } from "@opencode/core/aisdk"
-import { Generate } from "@opencode/core/generate"
-import { Integration } from "@opencode/core/integration"
-import { ModelResolver } from "@opencode/core/model-resolver"
-import { ID, Info, Model, Ref } from "@opencode/core/model"
-import { Provider } from "@opencode/core/provider"
-import { Npm } from "@opencode/util/npm"
+} from "@openbnk/ai"
+import { RequestExecutor } from "@openbnk/ai/route"
+import { OpenAIChat } from "@openbnk/ai/protocols"
+import { TestLLM } from "@openbnk/ai/testing"
+import { AISDK } from "@openbnk/core/aisdk"
+import { Generate } from "@openbnk/core/generate"
+import { Integration } from "@openbnk/core/integration"
+import { ModelResolver } from "@openbnk/core/model-resolver"
+import { ID, Info, Model, Ref } from "@openbnk/core/model"
+import { Provider } from "@openbnk/core/provider"
+import { Npm } from "@openbnk/util/npm"
 import { Effect, Exit, Fiber, Layer } from "effect"
 import { TestClock } from "effect/testing"
 import { HttpClient, HttpClientResponse } from "effect/http"
@@ -200,7 +200,7 @@ testEffect(Layer.empty).effect("attributes each stateless completion without cre
       HttpClient.HttpClient,
       HttpClient.make((request) =>
         Effect.sync(() => {
-          const session = request.headers["x-opencode-session"]
+          const session = request.headers["x-openbnk-session"]
           if (!session)
             return HttpClientResponse.fromWeb(
               request,

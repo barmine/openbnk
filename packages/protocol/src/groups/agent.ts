@@ -1,5 +1,5 @@
-import { Agent } from "@opencode/schema/agent"
-import { Location } from "@opencode/schema/location"
+import { Agent } from "@openbnk/schema/agent"
+import { Location } from "@openbnk/schema/location"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api"
 import { LocationQuery, locationQueryOpenApi } from "./location.js"

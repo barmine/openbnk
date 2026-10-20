@@ -31,13 +31,13 @@ describe("SSH connection commands", () => {
     expect(
       commandFailureDetail(1, {
         stdout:
-          'OPENCODE_SSH_REGISTRATION_BEGIN\n{"password":"secret"}\nOPENCODE_SSH_REGISTRATION_END\nFailed to read next file',
+          'OPENBNK_SSH_REGISTRATION_BEGIN\n{"password":"secret"}\nOPENBNK_SSH_REGISTRATION_END\nFailed to read next file',
         stderr: "",
       }),
     ).toBe("Failed to read next file")
     expect(
       commandFailureDetail(1, {
-        stdout: 'OPENCODE_SSH_REGISTRATION_BEGIN\n{"password":"secret"}',
+        stdout: 'OPENBNK_SSH_REGISTRATION_BEGIN\n{"password":"secret"}',
         stderr: "read interrupted",
       }),
     ).toBe("read interrupted")

@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import { SystemPart } from "@opencode/ai"
-import { Agent } from "@opencode/core/agent"
-import { Plugin } from "@opencode/core/plugin"
-import { PluginHooks } from "@opencode/core/plugin/hooks"
-import { PluginHost } from "@opencode/core/plugin/host"
-import { OptimizePlugin } from "@opencode/core/plugin/optimize"
-import { Session } from "@opencode/core/session"
-import { SessionSystemPrompt } from "@opencode/core/session/system-prompt"
-import type { SessionHooks } from "@opencode/plugin/effect/session"
-import { Model } from "@opencode/schema/model"
-import { Provider } from "@opencode/core/provider"
+import { SystemPart } from "@openbnk/ai"
+import { Agent } from "@openbnk/core/agent"
+import { Plugin } from "@openbnk/core/plugin"
+import { PluginHooks } from "@openbnk/core/plugin/hooks"
+import { PluginHost } from "@openbnk/core/plugin/host"
+import { OptimizePlugin } from "@openbnk/core/plugin/optimize"
+import { Session } from "@openbnk/core/session"
+import { SessionSystemPrompt } from "@openbnk/core/session/system-prompt"
+import type { SessionHooks } from "@openbnk/plugin/effect/session"
+import { Model } from "@openbnk/schema/model"
+import { Provider } from "@openbnk/core/provider"
 import { Effect } from "effect"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
@@ -48,11 +48,11 @@ const context = (id: string, system = fallback): SessionHooks["context"] => ({
 describe("OptimizePlugin", () => {
   test("enables prompt plugins without model-specific tool optimization", () => {
     expect(OptimizePlugin.Plugins.map((plugin) => plugin.id)).toEqual([
-      "opencode.prompt.openai",
-      "opencode.prompt.anthropic",
-      "opencode.prompt.kimi",
-      "opencode.prompt.arcee",
-      "opencode.prompt.meta",
+      "openbnk.prompt.openai",
+      "openbnk.prompt.anthropic",
+      "openbnk.prompt.kimi",
+      "openbnk.prompt.arcee",
+      "openbnk.prompt.meta",
     ])
   })
 
@@ -127,7 +127,7 @@ describe("OptimizePlugin", () => {
         SessionSystemPrompt.render(PROMPT_GPT, Object.keys(event.tools)),
         "Project instructions",
       ])
-      expect(event.system[0]?.text).not.toContain("${OPENCODE_TOOL_GUIDANCE}")
+      expect(event.system[0]?.text).not.toContain("${OPENBNK_TOOL_GUIDANCE}")
       expect(Object.keys(event.tools).sort()).toEqual(["edit", "glob", "grep", "patch", "read", "shell", "write"])
     }),
   )

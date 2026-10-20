@@ -1,4 +1,4 @@
-import { Logo } from "@opencode/ui/logo"
+import { Logo } from "@openbnk/ui/logo"
 import "./wordmark.css"
 
 export function NewSessionWordmark() {

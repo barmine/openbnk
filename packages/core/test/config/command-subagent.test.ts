@@ -1,21 +1,21 @@
 import { describe, expect } from "bun:test"
 import path from "path"
 import { Effect, Layer } from "effect"
-import { LanguageModel } from "@opencode/ai"
-import { OpenAIChat } from "@opencode/ai/protocols/openai-chat"
-import { TestLLM } from "@opencode/ai/testing"
-import { Agent } from "@opencode/core/agent"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNodePlatform } from "@opencode/core/effect/app-node-platform"
-import { Watcher } from "@opencode/core/filesystem/watcher"
-import { LocationServiceMap } from "@opencode/core/location-service-map"
-import { Model } from "@opencode/core/model"
-import { Provider } from "@opencode/core/provider"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Session } from "@opencode/core/session"
-import { SessionRunnerModel } from "@opencode/core/session/runner/model"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Global } from "@opencode/util/global"
+import { LanguageModel } from "@openbnk/ai"
+import { OpenAIChat } from "@openbnk/ai/protocols/openai-chat"
+import { TestLLM } from "@openbnk/ai/testing"
+import { Agent } from "@openbnk/core/agent"
+import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
+import { LayerNodePlatform } from "@openbnk/core/effect/app-node-platform"
+import { Watcher } from "@openbnk/core/filesystem/watcher"
+import { LocationServiceMap } from "@openbnk/core/location-service-map"
+import { Model } from "@openbnk/core/model"
+import { Provider } from "@openbnk/core/provider"
+import { AbsolutePath } from "@openbnk/core/schema"
+import { Session } from "@openbnk/core/session"
+import { SessionRunnerModel } from "@openbnk/core/session/runner/model"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
+import { Global } from "@openbnk/util/global"
 import { tempGlobalLayer } from "../fixture/global"
 import { offlineModels } from "../fixture/models"
 import { tmpdirScoped } from "../fixture/tmpdir"
@@ -133,7 +133,7 @@ function project(
     const definition = { description: "Review code", template: "Review $ARGUMENTS: !`printf ready`", ...command }
     yield* Effect.promise(() =>
       Bun.write(
-        path.join(tmp.path, "opencode.json"),
+        path.join(tmp.path, "openbnk.json"),
         JSON.stringify({
           agents: { reviewer: { mode: "subagent", model: "test/child" } },
           ...(format === "markdown" ? {} : { commands: { review: definition } }),
@@ -143,7 +143,7 @@ function project(
     if (format === "markdown")
       yield* Effect.promise(() =>
         Bun.write(
-          path.join(tmp.path, ".opencode/commands/review.md"),
+          path.join(tmp.path, ".openbnk/commands/review.md"),
           [
             "---",
             "description: Review code",

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/client",
+  "name": "@openbnk/client",
   "version": "2.1.1",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/anomalyco/openbnk.git",
     "directory": "packages/client"
   },
   "publishConfig": {
@@ -33,8 +33,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@opencode/schema": "workspace:*",
-    "@opencode/protocol": "workspace:*"
+    "@openbnk/schema": "workspace:*",
+    "@openbnk/protocol": "workspace:*"
   },
   "peerDependencies": {
     "effect": "catalog:",
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",
-    "@opencode/httpapi-codegen": "workspace:*",
+    "@openbnk/httpapi-codegen": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@typescript/native": "catalog:",

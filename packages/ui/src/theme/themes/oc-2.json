@@ -1,6 +1,6 @@
 {
-  "$schema": "https://opencode.ai/desktop-theme.json",
-  "name": "OpenCode",
+  "$schema": "https://openbnk.local/desktop-theme.json",
+  "name": "OpenBnk",
   "id": "oc-2",
   "light": {
     "palette": {

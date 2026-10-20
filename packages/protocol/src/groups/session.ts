@@ -1,13 +1,13 @@
-import { SessionMessage } from "@opencode/schema/session-message"
-import { SessionInbox } from "@opencode/schema/session-inbox"
-import { PromptInput } from "@opencode/schema/prompt-input"
-import { Session } from "@opencode/schema/session"
-import { SessionStats } from "@opencode/schema/session-stats"
-import { InstructionEntry } from "@opencode/schema/instruction-entry"
-import { Project } from "@opencode/schema/project"
-import { DateTimeUtcFromMillis, NonNegativeInt, PositiveInt } from "@opencode/schema/schema"
-import { Event } from "@opencode/schema/event"
-import { SessionLegacy } from "@opencode/schema/session-legacy"
+import { SessionMessage } from "@openbnk/schema/session-message"
+import { SessionInbox } from "@openbnk/schema/session-inbox"
+import { PromptInput } from "@openbnk/schema/prompt-input"
+import { Session } from "@openbnk/schema/session"
+import { SessionStats } from "@openbnk/schema/session-stats"
+import { InstructionEntry } from "@openbnk/schema/instruction-entry"
+import { Project } from "@openbnk/schema/project"
+import { DateTimeUtcFromMillis, NonNegativeInt, PositiveInt } from "@openbnk/schema/schema"
+import { Event } from "@openbnk/schema/event"
+import { SessionLegacy } from "@openbnk/schema/session-legacy"
 import { Context, Schema, SchemaGetter, Struct } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema, OpenApi } from "effect/http-api"
 import {
@@ -27,15 +27,15 @@ import {
   SkillNotFoundError,
   UnknownError,
 } from "../errors.js"
-import { Agent } from "@opencode/schema/agent"
-import { Skill } from "@opencode/schema/skill"
-import { Model } from "@opencode/schema/model"
-import { Permission } from "@opencode/schema/permission"
-import { Location } from "@opencode/schema/location"
-import { SessionEvent } from "@opencode/schema/session-event"
-import { EventLog } from "@opencode/schema/event-log"
-import { FileDiff } from "@opencode/schema/file-diff"
-import { Form } from "@opencode/schema/form"
+import { Agent } from "@openbnk/schema/agent"
+import { Skill } from "@openbnk/schema/skill"
+import { Model } from "@openbnk/schema/model"
+import { Permission } from "@openbnk/schema/permission"
+import { Location } from "@openbnk/schema/location"
+import { SessionEvent } from "@openbnk/schema/session-event"
+import { EventLog } from "@openbnk/schema/event-log"
+import { FileDiff } from "@openbnk/schema/file-diff"
+import { Form } from "@openbnk/schema/form"
 import { PublicSessionMessage } from "./message.js"
 
 const SessionActive = Schema.Struct({
@@ -215,7 +215,7 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S, FormI ext
           identifier: "session.active",
           summary: "List active sessions",
           description:
-            "Retrieve foreground Session drains currently owned by this OpenCode process. Sessions absent from the result are inactive.",
+            "Retrieve foreground Session drains currently owned by this OpenBnk process. Sessions absent from the result are inactive.",
         }),
       ),
     )
@@ -687,7 +687,7 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S, FormI ext
         query: { resume: BooleanFromString.pipe(Schema.optional) },
         success: Schema.Struct({
           interrupted: Schema.Boolean.annotate({
-            description: "Whether an active execution owned by this OpenCode process was interrupted.",
+            description: "Whether an active execution owned by this OpenBnk process was interrupted.",
           }),
         }).annotate({ identifier: "SessionInterruptResponse" }),
         error: SessionNotFoundError,
@@ -698,7 +698,7 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S, FormI ext
             identifier: "session.interrupt",
             summary: "Interrupt session execution",
             description:
-              "Interrupt active execution owned by this OpenCode process. Returns interrupted=true when an active execution was interrupted and false for the idle no-op. When resume=true, execution resumes pending steering input and next-in-line control items (manual compaction, moves) while queued prompts remain parked.",
+              "Interrupt active execution owned by this OpenBnk process. Returns interrupted=true when an active execution was interrupted and false for the idle no-op. When resume=true, execution resumes pending steering input and next-in-line control items (manual compaction, moves) while queued prompts remain parked.",
           }),
         ),
     )

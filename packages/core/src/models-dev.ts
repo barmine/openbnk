@@ -1,13 +1,13 @@
 import { Cause, Context, Duration, Effect, Layer, Option, Schedule, Schema, Semaphore } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/http"
-import { ModelsDev } from "@opencode/schema/models-dev"
-import { Money } from "@opencode/schema/money"
+import { ModelsDev } from "@openbnk/schema/models-dev"
+import { Money } from "@openbnk/schema/money"
 import { App } from "./app.js"
-import { Hash } from "@opencode/util/hash"
-import { FSUtil } from "@opencode/util/fs-util"
+import { Hash } from "@openbnk/util/hash"
+import { FSUtil } from "@openbnk/util/fs-util"
 import { Bus } from "./bus.js"
-import { makeGlobalNode } from "@opencode/util/effect/app-node"
-import { httpClient } from "@opencode/util/effect/app-node-platform"
+import { makeGlobalNode } from "@openbnk/util/effect/app-node"
+import { httpClient } from "@openbnk/util/effect/app-node-platform"
 import { Model } from "./model.js"
 import { AISDKNative } from "./aisdk-native.js"
 import { Provider } from "./provider.js"
@@ -103,7 +103,7 @@ function normalize(input: Record<string, SourceProvider>): readonly Snapshot[] {
       name: item.name,
       activation: "auto",
       package: packageName,
-      ...(item.api && packageName !== "@opencode/ai/providers/cloudflare-workers-ai"
+      ...(item.api && packageName !== "@openbnk/ai/providers/cloudflare-workers-ai"
         ? { settings: { baseURL: item.api } }
         : {}),
     } satisfies Provider.Info
@@ -218,7 +218,7 @@ function modelInfo(
   // Per model, so it never merges into a model that overrides to a different package.
   const settings = {
     ...(model.provider?.api ? { baseURL: model.provider.api } : {}),
-    ...(resolved === "@opencode/ai/providers/openai-compatible" ? { provider: providerID } : {}),
+    ...(resolved === "@openbnk/ai/providers/openai-compatible" ? { provider: providerID } : {}),
   }
   return {
     id,
@@ -250,7 +250,7 @@ function modelInfo(
   }
 }
 
-export { Event } from "@opencode/schema/models-dev"
+export { Event } from "@openbnk/schema/models-dev"
 
 export interface Interface {
   readonly get: () => Effect.Effect<readonly Snapshot[]>
@@ -265,7 +265,7 @@ export const Options = Schema.Struct({
 })
 export type Options = typeof Options.Type
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/ModelsDev") {}
+export class Service extends Context.Service<Service, Interface>()("@openbnk/ModelsDev") {}
 
 const CatalogJson = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown))
 const decodeCatalog = (text: string) =>
@@ -277,9 +277,9 @@ const Cache = Schema.Struct({
   digest: Schema.optional(Schema.String),
   body: CatalogJson,
 })
-const defaultSource = "https://models.opencode.ai"
+const defaultSource = "https://models.openbnk.local"
 
-// Bundled snapshot of https://models.opencode.ai/api.json, committed at
+// Bundled snapshot of https://models.openbnk.local/api.json, committed at
 // packages/core/src/models-dev/snapshot.txt and refreshed via
 // `bun run script/update-models-snapshot.ts`. Decoded and normalized once per
 // isolate: the snapshot is a multi-MB module-level constant and one isolate can
@@ -325,7 +325,8 @@ export const layer = (options?: Options) =>
       )
 
       const source = options?.url || defaultSource
-      const fetch = options?.fetch ?? true
+      // Never fetch the public catalog; only explicit url/file options are honored.
+      const fetch = options?.fetch ?? false
       const userAgent = App.useragent(app)
       const key = cacheKey(source)
       const ttl = Duration.minutes(5)
@@ -361,7 +362,7 @@ export const layer = (options?: Options) =>
 
       // The bundled snapshot is the boot-time floor for the catalog; the
       // periodic fetch below still refreshes on top.
-      const loadSnapshot = options?.snapshot === false ? Effect.undefined : bundledSnapshot
+      const loadSnapshot = options?.snapshot === true ? bundledSnapshot : Effect.undefined
 
       // Best-effort: a cache-write failure must never kill catalog
       // population. The payload has outgrown some KV backends' per-value

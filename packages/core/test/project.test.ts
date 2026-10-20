@@ -3,15 +3,15 @@ import { $ } from "bun"
 import fs from "fs/promises"
 import path from "path"
 import { Effect, Stream } from "effect"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Bus } from "@opencode/core/bus"
-import { Database } from "@opencode/core/database/database"
-import { Project } from "@opencode/core/project"
-import { ProjectSchema } from "@opencode/core/project/schema"
-import { ProjectTable } from "@opencode/core/project/sql"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Hash } from "@opencode/util/hash"
+import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
+import { Bus } from "@openbnk/core/bus"
+import { Database } from "@openbnk/core/database/database"
+import { Project } from "@openbnk/core/project"
+import { ProjectSchema } from "@openbnk/core/project/schema"
+import { ProjectTable } from "@openbnk/core/project/sql"
+import { AbsolutePath } from "@openbnk/core/schema"
+import { Hash } from "@openbnk/util/hash"
 import { initGit } from "./fixture/git"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -257,19 +257,19 @@ describe("Project archiving", () => {
         .values([
           {
             id: Project.ID.make("updated"),
-            worktree: abs("/opencode-missing-updated"),
+            worktree: abs("/openbnk-missing-updated"),
             sandboxes: [],
             time_active: old,
           },
           {
             id: Project.ID.make("active"),
-            worktree: abs("/opencode-missing-active"),
+            worktree: abs("/openbnk-missing-active"),
             sandboxes: [],
             time_updated: old,
           },
           {
             id: Project.ID.make("idle"),
-            worktree: abs("/opencode-missing-idle"),
+            worktree: abs("/openbnk-missing-idle"),
             sandboxes: [],
             time_updated: old,
             time_active: old,
@@ -294,7 +294,7 @@ describe("Project archiving", () => {
         .insert(ProjectTable)
         .values({
           id: Project.ID.global,
-          worktree: abs("/opencode-missing-global"),
+          worktree: abs("/openbnk-missing-global"),
           sandboxes: [],
           time_updated: 1,
           time_active: 1,
@@ -582,7 +582,7 @@ describe("Project.resolve", () => {
         (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
       )
       yield* Effect.promise(() => initRepo(tmp.path, { commit: true, remote: "git@github.com:owner/repo.git" }))
-      yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "opencode"), "old-id"))
+      yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "openbnk"), "old-id"))
       const project = yield* Project.Service
 
       const result = yield* project.resolve(abs(tmp.path))
@@ -603,7 +603,7 @@ describe("Project.resolve", () => {
 
       yield* project.resolve(abs(tmp.path))
 
-      expect(yield* Effect.promise(() => Bun.file(path.join(tmp.path, ".git", "opencode")).exists())).toBe(false)
+      expect(yield* Effect.promise(() => Bun.file(path.join(tmp.path, ".git", "openbnk")).exists())).toBe(false)
     }),
   )
 
@@ -708,7 +708,7 @@ describe("Project.resolve", () => {
         Effect.promise(() => $`rm -rf ${worktree}`.quiet().nothrow()).pipe(Effect.ignore),
       )
       yield* Effect.promise(() => initRepo(tmp.path, { commit: true, remote: "git@github.com:owner/repo.git" }))
-      yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "opencode"), "old-id"))
+      yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "openbnk"), "old-id"))
       yield* Effect.promise(() => $`git worktree add ${worktree} -b test-${Date.now()}`.cwd(tmp.path).quiet())
       const project = yield* Project.Service
       const db = (yield* Database.Service).db

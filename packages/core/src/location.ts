@@ -1,8 +1,8 @@
 import { Context, Effect, Layer } from "effect"
-import { Info, Ref, response } from "@opencode/schema/location"
+import { Info, Ref, response } from "@openbnk/schema/location"
 import { Project } from "./project.js"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { makeLocationNode, tags } from "@opencode/util/effect/app-node"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
+import { makeLocationNode, tags } from "@openbnk/util/effect/app-node"
 
 export * as Location from "./location.js"
 
@@ -12,7 +12,7 @@ export interface Interface extends Info {
   readonly vcs?: Project.Vcs
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/Location") {}
+export class Service extends Context.Service<Service, Interface>()("@openbnk/Location") {}
 
 export const node = LayerNode.unbound(Service, tags.values.location)
 

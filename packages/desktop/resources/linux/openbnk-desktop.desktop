@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=OpenBnk
+Exec=/opt/OpenBnk/ai.openbnk.desktop %U
+Terminal=false
+Type=Application
+Icon=ai.openbnk.desktop
+StartupWMClass=ai.openbnk.desktop
+NoDisplay=true
+Comment=Open source AI coding agent
+Categories=Development;

@@ -113,10 +113,10 @@
       }
     }
   },
-  "opencode-go": {
-    "id": "opencode-go",
-    "name": "OpenCode Go",
-    "env": ["OPENCODE_API_KEY"],
+  "openbnk-go": {
+    "id": "openbnk-go",
+    "name": "OpenBnk Go",
+    "env": ["OPENBNK_API_KEY"],
     "npm": "@ai-sdk/openai-compatible",
     "models": {
       "minimax-m3": {

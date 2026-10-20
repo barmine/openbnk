@@ -1,15 +1,15 @@
 import { DateTime, Schema } from "effect"
-import { Agent } from "@opencode/schema/agent"
-import { Location } from "@opencode/schema/location"
-import { Model } from "@opencode/schema/model"
-import { Project } from "@opencode/schema/project"
-import { Provider } from "@opencode/schema/provider"
+import { Agent } from "@openbnk/schema/agent"
+import { Location } from "@openbnk/schema/location"
+import { Model } from "@openbnk/schema/model"
+import { Project } from "@openbnk/schema/project"
+import { Provider } from "@openbnk/schema/provider"
 import { AbsolutePath, RelativePath } from "../schema.js"
-import { Workspace } from "@opencode/schema/workspace"
+import { Workspace } from "@openbnk/schema/workspace"
 import { SessionSchema } from "./schema.js"
 import type { SessionTable } from "./sql.js"
-import { PersistedRevert } from "@opencode/schema/session-revert"
-import { Money } from "@opencode/schema/money"
+import { PersistedRevert } from "@openbnk/schema/session-revert"
+import { Money } from "@openbnk/schema/money"
 
 const decodeRevert = Schema.decodeUnknownSync(PersistedRevert)
 

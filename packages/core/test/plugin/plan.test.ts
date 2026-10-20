@@ -1,21 +1,21 @@
 import { describe, expect } from "bun:test"
-import { Message, ToolFailure } from "@opencode/ai"
+import { Message, ToolFailure } from "@openbnk/ai"
 import { DateTime, Effect, Option, Stream, Types } from "effect"
-import type { SessionContext } from "@opencode/plugin/effect/session"
-import type { ToolHooks } from "@opencode/plugin/effect/tool"
-import { Agent } from "@opencode/core/agent"
-import { Environment } from "@opencode/core/environment/index"
-import { Event } from "@opencode/schema/event"
-import { Model } from "@opencode/core/model"
-import { PlanPlugin } from "@opencode/core/plugin/plan"
-import { Permission } from "@opencode/core/permission"
-import { Provider } from "@opencode/core/provider"
-import { Session } from "@opencode/core/session"
-import { SessionEvent } from "@opencode/core/session/event"
-import { SessionInbox } from "@opencode/core/session/inbox"
-import { SessionMessage } from "@opencode/core/session/message"
-import { Tool } from "@opencode/schema/tool"
-import { Global } from "@opencode/util/global"
+import type { SessionContext } from "@openbnk/plugin/effect/session"
+import type { ToolHooks } from "@openbnk/plugin/effect/tool"
+import { Agent } from "@openbnk/core/agent"
+import { Environment } from "@openbnk/core/environment/index"
+import { Event } from "@openbnk/schema/event"
+import { Model } from "@openbnk/core/model"
+import { PlanPlugin } from "@openbnk/core/plugin/plan"
+import { Permission } from "@openbnk/core/permission"
+import { Provider } from "@openbnk/core/provider"
+import { Session } from "@openbnk/core/session"
+import { SessionEvent } from "@openbnk/core/session/event"
+import { SessionInbox } from "@openbnk/core/session/inbox"
+import { SessionMessage } from "@openbnk/core/session/message"
+import { Tool } from "@openbnk/schema/tool"
+import { Global } from "@openbnk/util/global"
 import path from "path"
 import { it } from "../lib/effect"
 import { host } from "./host"
@@ -24,7 +24,7 @@ const sessionID = Session.ID.make("ses_plan_test")
 const plan = Agent.ID.make("plan")
 const build = Agent.ID.make("build")
 const home = "/home/plan-test"
-const planDirectory = path.join(home, ".opencode", "plan")
+const planDirectory = path.join(home, ".openbnk", "plan")
 
 const agentSelected = (agent: Agent.ID, previous: Agent.ID): SessionEvent.AgentSelected => ({
   id: Event.ID.create(),

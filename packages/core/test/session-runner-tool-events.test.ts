@@ -1,27 +1,27 @@
 import { expect, test } from "bun:test"
 import { Cause, Deferred, Effect, Exit, Fiber, Schema } from "effect"
 import { eq } from "drizzle-orm"
-import { LLMEvent } from "@opencode/ai"
-import { Money } from "@opencode/schema/money"
-import { Bus } from "@opencode/core/bus"
-import { Database } from "@opencode/core/database/database"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { EventTable } from "@opencode/core/event/sql"
-import { Event } from "@opencode/schema/event"
-import { Agent } from "@opencode/core/agent"
-import { SessionEvent } from "@opencode/core/session/event"
-import { SessionMessage } from "@opencode/core/session/message"
-import { Session } from "@opencode/core/session"
-import { SessionProjector } from "@opencode/core/session/projector"
-import { SessionMessageTable, SessionTable } from "@opencode/core/session/sql"
-import { Project } from "@opencode/core/project"
-import { ProjectTable } from "@opencode/core/project/sql"
-import { Model } from "@opencode/core/model"
-import { Provider } from "@opencode/core/provider"
-import { AbsolutePath, RelativePath } from "@opencode/core/schema"
-import { Snapshot } from "@opencode/core/snapshot"
-import { createLLMEventPublisher } from "@opencode/core/session/runner/publish-llm-event"
-import { LayerNode } from "@opencode/util/effect/layer-node"
+import { LLMEvent } from "@openbnk/ai"
+import { Money } from "@openbnk/schema/money"
+import { Bus } from "@openbnk/core/bus"
+import { Database } from "@openbnk/core/database/database"
+import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
+import { EventTable } from "@openbnk/core/event/sql"
+import { Event } from "@openbnk/schema/event"
+import { Agent } from "@openbnk/core/agent"
+import { SessionEvent } from "@openbnk/core/session/event"
+import { SessionMessage } from "@openbnk/core/session/message"
+import { Session } from "@openbnk/core/session"
+import { SessionProjector } from "@openbnk/core/session/projector"
+import { SessionMessageTable, SessionTable } from "@openbnk/core/session/sql"
+import { Project } from "@openbnk/core/project"
+import { ProjectTable } from "@openbnk/core/project/sql"
+import { Model } from "@openbnk/core/model"
+import { Provider } from "@openbnk/core/provider"
+import { AbsolutePath, RelativePath } from "@openbnk/core/schema"
+import { Snapshot } from "@openbnk/core/snapshot"
+import { createLLMEventPublisher } from "@openbnk/core/session/runner/publish-llm-event"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
 import { it, testEffect } from "./lib/effect"
 import { TestClock } from "effect/testing"
 
@@ -61,7 +61,7 @@ const capture = (
       agent: Agent.ID.make("build"),
       model: {
         id: Model.ID.make("model"),
-        providerID: Provider.ID.opencode,
+        providerID: Provider.ID.openbnk,
       },
       providerMetadataKey,
       pendingSnapshot: options?.pendingSnapshot,
@@ -167,7 +167,7 @@ testEffect(
         sessionID,
         assistantMessageID,
         agent: Agent.defaultID,
-        model: { id: Model.ID.make("test-model"), providerID: Provider.ID.opencode },
+        model: { id: Model.ID.make("test-model"), providerID: Provider.ID.openbnk },
         providerMetadataKey: "openai",
         started: 0,
       },

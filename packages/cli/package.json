@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode/cli",
+  "name": "@openbnk/cli",
   "version": "2.1.1",
   "type": "module",
   "license": "MIT",
   "bin": {
-    "opencode": "./bin/opencode.cjs",
-    "opencode2": "./bin/opencode2.cjs"
+    "openbnk": "./bin/openbnk.cjs",
+    "openbnk2": "./bin/openbnk2.cjs"
   },
   "files": [
     "bin"
@@ -28,13 +28,13 @@
     "@clack/core": "1.0.0-alpha.1",
     "@clack/prompts": "1.0.0-alpha.1",
     "@effect/platform-node": "catalog:",
-    "@opencode/client": "workspace:*",
-    "@opencode/plugin": "workspace:*",
+    "@openbnk/client": "workspace:*",
+    "@openbnk/plugin": "workspace:*",
     "@opencode-ai/pty": "0.3.1",
-    "@opencode/schema": "workspace:*",
-    "@opencode/server": "workspace:*",
-    "@opencode/tui": "workspace:*",
-    "@opencode/util": "workspace:*",
+    "@openbnk/schema": "workspace:*",
+    "@openbnk/server": "workspace:*",
+    "@openbnk/tui": "workspace:*",
+    "@openbnk/util": "workspace:*",
     "@opentui/core": "catalog:",
     "@opentui/solid": "catalog:",
     "@opentunnel/client": "0.4.0",
@@ -53,8 +53,8 @@
     "ws": "8.21.0"
   },
   "devDependencies": {
-    "@opencode/script": "workspace:*",
-    "@opencode/protocol": "workspace:*",
+    "@openbnk/script": "workspace:*",
+    "@openbnk/protocol": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@typescript/native": "catalog:",

@@ -1,4 +1,4 @@
-import type { FormAnswer, FormField, FormInfo, FormValue } from "@opencode/client/promise"
+import type { FormAnswer, FormField, FormInfo, FormValue } from "@openbnk/client/promise"
 import {
   formCustom,
   formDisplayValue,

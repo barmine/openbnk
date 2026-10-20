@@ -1,33 +1,33 @@
 import { expect, test } from "bun:test"
-import { GenerationOptions, LLMClient, LLMEvent, LanguageModel, ToolDefinition, type LLMRequest } from "@opencode/ai"
-import { OpenAIChat } from "@opencode/ai/protocols"
-import { Database } from "@opencode/core/database/database"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { llmClient } from "@opencode/core/effect/app-node-platform"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Bus } from "@opencode/core/bus"
-import { EventTable } from "@opencode/core/event/sql"
-import { SessionCompaction } from "@opencode/core/session/compaction"
-import type { SessionContext } from "@opencode/core/session/context"
-import { SessionEvent } from "@opencode/core/session/event"
-import { SessionMessage } from "@opencode/core/session/message"
-import { SessionModelRequest } from "@opencode/core/session/model-request"
-import { PluginHooks } from "@opencode/core/plugin/hooks"
-import { SessionProjector } from "@opencode/core/session/projector"
-import { SessionRunnerModel } from "@opencode/core/session/runner/model"
-import { SessionMessageTable, SessionTable } from "@opencode/core/session/sql"
-import { SessionStore } from "@opencode/core/session/store"
-import { Session } from "@opencode/core/session"
-import { Location } from "@opencode/core/location"
-import { Project } from "@opencode/core/project"
-import { ProjectTable } from "@opencode/core/project/sql"
-import { App } from "@opencode/core/app"
-import { Agent } from "@opencode/core/agent"
-import { Provider } from "@opencode/core/provider"
-import { AbsolutePath } from "@opencode/core/schema"
-import { Money } from "@opencode/schema/money"
-import { Skill } from "@opencode/schema/skill"
-import { Shell } from "@opencode/schema/shell"
+import { GenerationOptions, LLMClient, LLMEvent, LanguageModel, ToolDefinition, type LLMRequest } from "@openbnk/ai"
+import { OpenAIChat } from "@openbnk/ai/protocols"
+import { Database } from "@openbnk/core/database/database"
+import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
+import { llmClient } from "@openbnk/core/effect/app-node-platform"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
+import { Bus } from "@openbnk/core/bus"
+import { EventTable } from "@openbnk/core/event/sql"
+import { SessionCompaction } from "@openbnk/core/session/compaction"
+import type { SessionContext } from "@openbnk/core/session/context"
+import { SessionEvent } from "@openbnk/core/session/event"
+import { SessionMessage } from "@openbnk/core/session/message"
+import { SessionModelRequest } from "@openbnk/core/session/model-request"
+import { PluginHooks } from "@openbnk/core/plugin/hooks"
+import { SessionProjector } from "@openbnk/core/session/projector"
+import { SessionRunnerModel } from "@openbnk/core/session/runner/model"
+import { SessionMessageTable, SessionTable } from "@openbnk/core/session/sql"
+import { SessionStore } from "@openbnk/core/session/store"
+import { Session } from "@openbnk/core/session"
+import { Location } from "@openbnk/core/location"
+import { Project } from "@openbnk/core/project"
+import { ProjectTable } from "@openbnk/core/project/sql"
+import { App } from "@openbnk/core/app"
+import { Agent } from "@openbnk/core/agent"
+import { Provider } from "@openbnk/core/provider"
+import { AbsolutePath } from "@openbnk/core/schema"
+import { Money } from "@openbnk/schema/money"
+import { Skill } from "@openbnk/schema/skill"
+import { Shell } from "@openbnk/schema/shell"
 import { DateTime, Effect, Fiber, Layer, Schema, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
@@ -535,15 +535,15 @@ it.effect("manual compaction summarizes short context instead of no-op", () =>
     expect(requests).toHaveLength(1)
     expect(requests[0]?.promptCacheKey).toBe(parentID)
     expect(requests[0]?.http?.headers).toEqual({
-      "x-opencode-session-id": session.id,
-      "x-opencode-parent-session-id": parentID,
+      "x-openbnk-session-id": session.id,
+      "x-openbnk-parent-session-id": parentID,
       "x-session-affinity": parentID,
       "X-Session-Id": parentID,
       "x-parent-session-id": parentID,
       "User-Agent": App.useragent(App.make()),
-      "x-opencode-project": Project.ID.global,
-      "x-opencode-session": parentID,
-      "x-opencode-client": "opencode",
+      "x-openbnk-project": Project.ID.global,
+      "x-openbnk-session": parentID,
+      "x-openbnk-client": "openbnk",
     })
     expect(requests[0]?.generation).toEqual(GenerationOptions.make({ maxTokens: 30_000 }))
     expect(JSON.stringify(requests[0]?.messages)).toContain("Manual compaction should include this short conversation.")

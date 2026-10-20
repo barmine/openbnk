@@ -13,28 +13,28 @@ import { CLI_BINARIES, nodePtyPackage } from "./scripts/utils"
 const { FileMatcher } = createRequire(import.meta.resolve("electron-builder"))("app-builder-lib/out/fileMatcher")
 
 const channels = [
-  { channel: "dev", appId: "ai.opencode.desktop.dev" },
-  { channel: "beta", appId: "ai.opencode.desktop.beta" },
-  { channel: "prod", appId: "ai.opencode.desktop" },
+  { channel: "dev", appId: "ai.openbnk.desktop.dev" },
+  { channel: "beta", appId: "ai.openbnk.desktop.beta" },
+  { channel: "prod", appId: "ai.openbnk.desktop" },
 ] as const
 
 function load(channel: string, target?: string): Configuration {
-  const previous = process.env.OPENCODE_CHANNEL
-  const previousTarget = process.env.OPENCODE_CLI_TARGET
-  process.env.OPENCODE_CHANNEL = channel
+  const previous = process.env.OPENBNK_CHANNEL
+  const previousTarget = process.env.OPENBNK_CLI_TARGET
+  process.env.OPENBNK_CHANNEL = channel
 
-  if (target !== undefined) process.env.OPENCODE_CLI_TARGET = target
-  else delete process.env.OPENCODE_CLI_TARGET
+  if (target !== undefined) process.env.OPENBNK_CLI_TARGET = target
+  else delete process.env.OPENBNK_CLI_TARGET
 
   try {
     return getConfig()
   } finally {
-    delete process.env.OPENCODE_CHANNEL
-    delete process.env.OPENCODE_CLI_TARGET
+    delete process.env.OPENBNK_CHANNEL
+    delete process.env.OPENBNK_CLI_TARGET
 
-    if (previous !== undefined) process.env.OPENCODE_CHANNEL = previous
+    if (previous !== undefined) process.env.OPENBNK_CHANNEL = previous
 
-    if (previousTarget !== undefined) process.env.OPENCODE_CLI_TARGET = previousTarget
+    if (previousTarget !== undefined) process.env.OPENBNK_CLI_TARGET = previousTarget
   }
 }
 
@@ -57,16 +57,16 @@ test.each(channels)("channel identity for $channel", ({ channel, appId }) => {
   for (const fpm of [config.deb?.fpm, config.rpm?.fpm]) {
     expect(fpm).toContainEqual(expect.stringContaining(`/usr/share/metainfo/${appId}.metainfo.xml`))
     expect(
-      fpm?.some((entry) => entry.endsWith("opencode-desktop.desktop=/usr/share/applications/opencode-desktop.desktop")),
+      fpm?.some((entry) => entry.endsWith("openbnk-desktop.desktop=/usr/share/applications/openbnk-desktop.desktop")),
     ).toBe(channel === "prod")
   }
 })
 
 test("legacy Linux launcher stays hidden", async () => {
-  const desktop = await Bun.file(path.join(import.meta.dirname, "resources/linux/opencode-desktop.desktop")).text()
-  expect(desktop).toContain("Exec=/opt/OpenCode/ai.opencode.desktop %U")
-  expect(desktop).toContain("Icon=ai.opencode.desktop")
-  expect(desktop).toContain("StartupWMClass=ai.opencode.desktop")
+  const desktop = await Bun.file(path.join(import.meta.dirname, "resources/linux/openbnk-desktop.desktop")).text()
+  expect(desktop).toContain("Exec=/opt/OpenBnk/ai.openbnk.desktop %U")
+  expect(desktop).toContain("Icon=ai.openbnk.desktop")
+  expect(desktop).toContain("StartupWMClass=ai.openbnk.desktop")
   expect(desktop).toContain("NoDisplay=true")
 })
 
@@ -78,9 +78,9 @@ test("shared packaging defaults", async () => {
   const include = path.join(import.meta.dirname, "resources/windows/installer.nsh")
   expect(config.nsis?.include).toBe(include)
   expect(await Bun.file(include).exists()).toBe(true)
-  expect(config.files).toContain("!resources/opencode-cli*")
+  expect(config.files).toContain("!resources/openbnk-cli*")
   expect(config.extraResources).toEqual([
-    { from: "resources/", to: "", filter: ["opencode-cli", "opencode-cli.exe", "opencode-cli.version"] },
+    { from: "resources/", to: "", filter: ["openbnk-cli", "openbnk-cli.exe", "openbnk-cli.version"] },
   ])
 })
 
@@ -153,7 +153,7 @@ test("trims external dependencies without excluding runtime files", () => {
 
 test("the trimmed Zip.js package can still export compressed logs", async () => {
   const config = load("dev")
-  const dir = await mkdtemp(path.join(os.tmpdir(), "opencode-zip-package-"))
+  const dir = await mkdtemp(path.join(os.tmpdir(), "openbnk-zip-package-"))
   const source = path.dirname(fileURLToPath(import.meta.resolve("@zip.js/zip.js/package.json")))
   const filter = trimFilter(dir, config)
 

@@ -1,6 +1,6 @@
 import type { ClientCapabilities } from "@agentclientprotocol/sdk"
 
-export const ChildSessionUpdates = "opencode/child-session-updates"
+export const ChildSessionUpdates = "openbnk/child-session-updates"
 
 export type Capabilities = ReturnType<typeof parse>
 

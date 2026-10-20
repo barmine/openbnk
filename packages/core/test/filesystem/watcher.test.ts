@@ -3,22 +3,22 @@ import { describe, expect } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
 import { Deferred, Duration, Effect, Fiber, Layer, Option, Schedule, Stream } from "effect"
-import { Config } from "@opencode/core/config"
-import { ConfigLocationWatcherPlugin } from "@opencode/core/config/plugin/location-watcher"
-import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { makeLocationNode } from "@opencode/util/effect/app-node"
-import { LayerNode } from "@opencode/util/effect/layer-node"
-import { Bus } from "@opencode/core/bus"
-import { FSUtil } from "@opencode/util/fs-util"
-import { LocationWatcher } from "@opencode/core/filesystem/location-watcher"
-import { LocationWatcherPolicy } from "@opencode/core/filesystem/location-watcher-policy"
-import { Watcher } from "@opencode/core/filesystem/watcher"
-import { FileSystem } from "@opencode/schema/filesystem"
-import { Document, Event, Info, type Entry } from "@opencode/schema/config"
-import { Location } from "@opencode/core/location"
-import { Plugin } from "@opencode/core/plugin"
-import { PluginSupervisor } from "@opencode/core/plugin/supervisor"
-import { AbsolutePath } from "@opencode/core/schema"
+import { Config } from "@openbnk/core/config"
+import { ConfigLocationWatcherPlugin } from "@openbnk/core/config/plugin/location-watcher"
+import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
+import { makeLocationNode } from "@openbnk/util/effect/app-node"
+import { LayerNode } from "@openbnk/util/effect/layer-node"
+import { Bus } from "@openbnk/core/bus"
+import { FSUtil } from "@openbnk/util/fs-util"
+import { LocationWatcher } from "@openbnk/core/filesystem/location-watcher"
+import { LocationWatcherPolicy } from "@openbnk/core/filesystem/location-watcher-policy"
+import { Watcher } from "@openbnk/core/filesystem/watcher"
+import { FileSystem } from "@openbnk/schema/filesystem"
+import { Document, Event, Info, type Entry } from "@openbnk/schema/config"
+import { Location } from "@openbnk/core/location"
+import { Plugin } from "@openbnk/core/plugin"
+import { PluginSupervisor } from "@openbnk/core/plugin/supervisor"
+import { AbsolutePath } from "@openbnk/core/schema"
 import { initRepo } from "../fixture/git"
 import { location } from "../fixture/location"
 import { tmpdir } from "../fixture/tmpdir"
@@ -63,11 +63,11 @@ describe("Watcher lifecycle", () => {
         const watcher = yield* Watcher.Service
         const consumer = yield* watcher
           .subscribe(
-            { path: "/shared", type: "entries", names: ["opencode.json"] },
+            { path: "/shared", type: "entries", names: ["openbnk.json"] },
             Effect.gen(function* () {
               counts.ready++
               const notify = yield* Deferred.await(publish)
-              notify({ path: "/shared/opencode.json", type: "create" })
+              notify({ path: "/shared/openbnk.json", type: "create" })
             }),
           )
           .pipe(Effect.flatMap(Stream.runHead), Effect.forkScoped({ startImmediately: true }))
@@ -75,7 +75,7 @@ describe("Watcher lifecycle", () => {
         expect(counts.ready).toBe(0)
         yield* Deferred.succeed(acquired, undefined)
         expect(Option.getOrUndefined(yield* Fiber.join(consumer))).toEqual({
-          path: "/shared/opencode.json",
+          path: "/shared/openbnk.json",
           type: "create",
         })
         expect(counts).toEqual({ ready: 1, closed: 1 })
@@ -120,7 +120,7 @@ describe("Watcher lifecycle", () => {
             native.subscribe({
               type: "entries",
               target: tmp.path,
-              names: ["opencode.json", ".opencode"],
+              names: ["openbnk.json", ".openbnk"],
               ignore: [],
               publish: (update) => events.push(update),
             }),
@@ -128,19 +128,19 @@ describe("Watcher lifecycle", () => {
           )
           yield* Effect.promise(async () => {
             await fs.mkdir(path.join(tmp.path, "nested"))
-            await fs.writeFile(path.join(tmp.path, "nested", "opencode.json"), "ignored")
-            await fs.writeFile(path.join(tmp.path, "opencode.jsonc"), "ignored")
-            await fs.writeFile(path.join(tmp.path, "opencode.json"), "first")
+            await fs.writeFile(path.join(tmp.path, "nested", "openbnk.json"), "ignored")
+            await fs.writeFile(path.join(tmp.path, "openbnk.jsonc"), "ignored")
+            await fs.writeFile(path.join(tmp.path, "openbnk.json"), "first")
           })
           yield* Effect.sync(() => events.length).pipe(
             Effect.filterOrFail((count) => count > 0),
             Effect.retry(Schedule.spaced("10 millis")),
             Effect.timeout("1 second"),
           )
-          expect(events.every((update) => update.path === path.join(tmp.path, "opencode.json"))).toBe(true)
+          expect(events.every((update) => update.path === path.join(tmp.path, "openbnk.json"))).toBe(true)
           yield* Effect.sleep("10 millis")
-          yield* Effect.promise(() => fs.mkdir(path.join(tmp.path, ".opencode")))
-          yield* Effect.sync(() => events.some((update) => update.path === path.join(tmp.path, ".opencode"))).pipe(
+          yield* Effect.promise(() => fs.mkdir(path.join(tmp.path, ".openbnk")))
+          yield* Effect.sync(() => events.some((update) => update.path === path.join(tmp.path, ".openbnk"))).pipe(
             Effect.filterOrFail(Boolean),
             Effect.retry(Schedule.spaced("10 millis")),
             Effect.timeout("1 second"),
@@ -189,8 +189,8 @@ describe("Watcher lifecycle", () => {
         watcher
           .subscribe({ path: "/shared", type: "entries", names })
           .pipe(Effect.flatMap(Stream.runDrain), Effect.forkScoped({ startImmediately: true }))
-      const first = yield* consume(["opencode.json", ".opencode", "opencode.json"])
-      const second = yield* consume([".opencode", "opencode.json"])
+      const first = yield* consume(["openbnk.json", ".openbnk", "openbnk.json"])
+      const second = yield* consume([".openbnk", "openbnk.json"])
       yield* Effect.yieldNow
       expect(counts.subscribes).toBe(1)
 
@@ -560,7 +560,7 @@ describeNative("LocationWatcher", () => {
       Effect.gen(function* () {
         const fs = yield* FSUtil.Service
         const watcher = yield* Watcher.Service
-        const target = path.join(directory, "opencode.json")
+        const target = path.join(directory, "openbnk.json")
         const sibling = path.join(directory, "other.json")
         const updates = yield* watcher.subscribe({ path: target, type: "file" })
         const update = yield* updates.pipe(
