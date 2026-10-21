@@ -62,7 +62,12 @@ say "installing dependencies"
 say "building openbnk (takes a minute or two)"
 out=$(mktemp -d)
 trap 'rm -rf "$out"' EXIT
-(cd "$SRC/packages/cli" && bun run script/build.ts --single --skip-install "--outdir=$out" >"$out/build.log" 2>&1) ||
+# Version is VERSION plus the commit, e.g. 0.1.0+6307a22. The channel stays the branch name, which
+# keeps the session database and background service the same as earlier builds of that branch.
+version="$(tr -d '[:space:]' <"$SRC/VERSION")+$(git -C "$SRC" rev-parse --short HEAD)"
+channel=$(git -C "$SRC" branch --show-current | sed 's/[^a-zA-Z0-9._-]/-/g')
+(cd "$SRC/packages/cli" && OPENBNK_VERSION=$version OPENBNK_CHANNEL=${channel:-detached} \
+  bun run script/build.ts --single --skip-install "--outdir=$out" >"$out/build.log" 2>&1) ||
   { tail -n 40 "$out/build.log" >&2; die "build failed"; }
 binary=$(find "$out" -path '*/bin/openbnk' -type f | head -n 1)
 [ -n "$binary" ] || die "build finished but no binary was produced"
@@ -72,15 +77,38 @@ install -m 0755 "$binary" "$BIN_DIR/openbnk.new"
 mv -f "$BIN_DIR/openbnk.new" "$BIN_DIR/openbnk"
 say "installed $("$BIN_DIR/openbnk" --version) to $BIN_DIR/openbnk"
 
+# PATH for new shells: every existing zsh/bash startup file, plus the current shell's (created if
+# missing). macOS terminals start bash as a login shell, which reads .bash_profile.
+rcs=("$HOME/.zshrc" "$HOME/.bashrc")
+[ "$(uname -s)" = Darwin ] && rcs+=("$HOME/.bash_profile")
+for rc in "${rcs[@]}"; do
+  case "$rc:${SHELL:-}" in
+    */.zshrc:*/zsh | */.bashrc:*/bash | */.bash_profile:*/bash) ;;
+    *) [ -f "$rc" ] || continue ;;
+  esac
+  if ! grep -qs "$BIN_DIR" "$rc"; then
+    printf '\nexport PATH="%s:$PATH"\n' "$BIN_DIR" >>"$rc"
+    say "added $BIN_DIR to PATH in $rc"
+  fi
+  # zsh caches the command list; this makes completion notice newly installed commands by itself.
+  if [[ "$rc" == */.zshrc ]] && ! grep -qs "completion:\*' rehash true" "$rc"; then
+    printf "zstyle ':completion:*' rehash true\n" >>"$rc"
+  fi
+done
+
+# The terminal running this script keeps its old PATH. If BIN_DIR isn't on it, also link openbnk into
+# a writable directory that is, so the command works here right away. Never replace a different file.
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *)
-    rc="$HOME/.bashrc"
-    case "${SHELL:-}" in */zsh) rc="$HOME/.zshrc" ;; esac
-    if ! grep -qs "$BIN_DIR" "$rc"; then
-      printf '\nexport PATH="%s:$PATH"\n' "$BIN_DIR" >>"$rc"
-      say "added $BIN_DIR to PATH in $rc (open a new shell)"
-    fi
+    for dir in /opt/homebrew/bin /usr/local/bin "$HOME/bin"; do
+      case ":$PATH:" in *":$dir:"*) ;; *) continue ;; esac
+      [ -w "$dir" ] || continue
+      [ ! -e "$dir/openbnk" ] || [ "$(readlink "$dir/openbnk")" = "$BIN_DIR/openbnk" ] || continue
+      ln -sf "$BIN_DIR/openbnk" "$dir/openbnk"
+      say "linked $dir/openbnk so it works in this terminal now"
+      break
+    done
     ;;
 esac
 
@@ -111,5 +139,8 @@ cat <<EOF
 Done. Run \`openbnk\` in a project directory to start.
   Model server: ${server:-not set} (set: provider.bnk.options.baseURL in $CONFIG_FILE, or OPENBNK_BASE_URL)
   Learning:     openbnk learn list | memory | undo <id> | accept <id> | off
-  Update:       re-run this installer
+  Update:       ./update.sh   (from your openbnk checkout)
 EOF
+# zsh only rescans commands for tab completion when told to; new terminals already pick it up.
+[[ "${SHELL:-}" == */zsh ]] && echo "  Tab completion in this terminal: run \`rehash\` once (new terminals work as-is)."
+true

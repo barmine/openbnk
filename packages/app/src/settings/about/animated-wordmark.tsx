@@ -1,9 +1,9 @@
 import { createEffect, For, on, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 
-const target = ["o", "p", "e", "n", "c", "o", "d", "e"] as const
+const target = ["o", "p", "e", "n", "b", "n", "k"] as const
 
-const choices = ["o", "p", "e", "n", "c", "d"] as const
+const choices = ["o", "p", "e", "n", "b", "k"] as const
 
 export function AnimatedWordmark(props: { active: boolean }) {
   const [state, setState] = createStore({ letters: [...target] })
@@ -47,7 +47,7 @@ export function AnimatedWordmark(props: { active: boolean }) {
   onCleanup(() => timers.forEach(clearTimeout))
 
   return (
-    <svg class="settings-about-wordmark" viewBox="0 0 234 42" aria-hidden="true">
+    <svg class="settings-about-wordmark" viewBox="0 0 204 42" aria-hidden="true">
       <defs>
         <symbol id="settings-about-letter-o" viewBox="0 0 24 42">
           <path class="settings-about-letter-shadow" d="M18 30H6V18H18V30Z" />
@@ -65,13 +65,12 @@ export function AnimatedWordmark(props: { active: boolean }) {
           <path class="settings-about-letter-shadow" d="M18 36H6V18H18V36Z" />
           <path d="M18 12H6V36H0V6H18V12ZM24 36H18V12H24V36Z" />
         </symbol>
-        <symbol id="settings-about-letter-c" viewBox="0 0 24 42">
-          <path class="settings-about-letter-shadow" d="M24 30H6V18H24V30Z" />
-          <path d="M24 12H6V30H24V36H0V6H24V12Z" />
+        <symbol id="settings-about-letter-b" viewBox="0 0 24 42">
+          <path class="settings-about-letter-shadow" d="M18 30H6V18H18Z" />
+          <path d="M0 0H6V6H24V36H0ZM18 12H6V30H18Z" />
         </symbol>
-        <symbol id="settings-about-letter-d" viewBox="0 0 24 42">
-          <path class="settings-about-letter-shadow" d="M18 30H6V18H18V30Z" />
-          <path d="M18 12H6V30H18V12ZM24 36H0V6H18V0H24V36Z" />
+        <symbol id="settings-about-letter-k" viewBox="0 0 24 42">
+          <path d="M0 0H6V36H0ZM18 6H24V12H18ZM12 12H18V18H12ZM6 18H12V24H6ZM12 24H18V30H12ZM18 30H24V36H18Z" />
         </symbol>
       </defs>
       <For each={state.letters}>

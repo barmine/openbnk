@@ -14,22 +14,42 @@ opencode agent harness (TUI, CLI, tools, MCP, plugins, skills) and makes three c
 
 ## Install
 
-On any Linux or macOS machine that has `git`, `curl` and `unzip`, plus `gh` logged in to GitHub:
+You need Linux or macOS with `git`, `curl` and `unzip` installed.
+
+1. Clone the repository:
+
+   ```sh
+   git clone https://github.com/christ-pher/openbnk.git
+   cd openbnk
+   ```
+
+2. Run the installer:
+
+   ```sh
+   ./install
+   ```
+
+   It installs Bun if it's missing, builds openbnk from this checkout (this takes a minute or two),
+   and installs the binary to `~/.local/bin/openbnk`.
+
+3. When asked, enter your model server's URL, for example `http://my-server:8080/v1`. It is saved to
+   `~/.config/openbnk/openbnk.json`. To skip the question, set `OPENBNK_BASE_URL` before running
+   the installer. You are only asked on the first install.
+
+4. Open a new terminal, go to a project directory, and run `openbnk`.
+
+## Update
+
+From your openbnk checkout, get the latest source and run the installer again:
 
 ```sh
-bash <(gh api repos/christ-pher/openbnk/contents/install -H "Accept: application/vnd.github.raw")
+cd openbnk
+./update.sh
 ```
 
-Or from a checkout, run `./install`. The installer:
+`update.sh` runs `git pull` and then `./install`.
 
-1. installs Bun if it's missing,
-2. clones the source to `~/.local/share/openbnk/src`,
-3. builds a native binary,
-4. installs it to `~/.local/bin/openbnk`,
-5. on first install, asks for your model server's URL and saves it to `~/.config/openbnk/openbnk.json`.
-   Set `OPENBNK_BASE_URL` before running the installer to skip the question.
-
-To update, re-run the installer. It never overwrites an existing config file.
+The installer rebuilds the binary and replaces the old one. It never overwrites your existing config.
 
 ## Model server
 
