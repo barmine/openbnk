@@ -9,13 +9,14 @@ const RemoteModel = Schema.Struct({
 
 const Response = Schema.Struct({ data: Schema.Array(RemoteModel) })
 
-// The only built-in provider: an OpenAI-compatible local inference server. Every model it serves
-// from /v1/models is exposed. Override the origin with provider.bnk.options.baseURL in config.
+// The only built-in provider: an OpenAI-compatible inference server. Every model it serves from
+// /v1/models is exposed. There is no default server: set provider.bnk.options.baseURL in config, or
+// OPENBNK_BASE_URL (with or without the trailing /v1); config takes precedence.
 export const make = createLocalProviderPlugin({
   id: "openbnk.provider.bnk",
   providerID: "bnk",
   name: "BNK Local",
-  origin: "http://10.0.75.254:8080",
+  origin: process.env.OPENBNK_BASE_URL?.replace(/\/+$/, "").replace(/\/v1$/, "") || undefined,
   discover: (client) =>
     Effect.gen(function* () {
       const response = yield* client.getJson("/v1/models", Response)

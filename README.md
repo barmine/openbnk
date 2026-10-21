@@ -3,8 +3,8 @@
 A private, self-hosted fork of [opencode](https://github.com/anomalyco/opencode). It keeps the full
 opencode agent harness (TUI, CLI, tools, MCP, plugins, skills) and makes three changes:
 
-- **Local inference only.** The only built-in model provider is your OpenAI-compatible server at
-  `http://10.0.75.254:8080/v1`. Every model it serves (`GET /v1/models`) shows up automatically. Hosted
+- **Local inference only.** The only built-in model provider is your own OpenAI-compatible server
+  (see [Model server](#model-server)). Every model it serves (`GET /v1/models`) shows up automatically. Hosted
   providers are not registered.
 - **No phone-home.** Nothing contacts opencode or Anomaly infrastructure: no models.dev catalog fetch,
   no update checks, no remote-access tunnel, no hosted MCP OAuth client document, and no Sentry. The
@@ -25,15 +25,27 @@ Or from a checkout, run `./install`. The installer:
 1. installs Bun if it's missing,
 2. clones the source to `~/.local/share/openbnk/src`,
 3. builds a native binary,
-4. installs it to `~/.local/bin/openbnk`.
+4. installs it to `~/.local/bin/openbnk`,
+5. on first install, asks for your model server's URL and saves it to `~/.config/openbnk/openbnk.json`.
+   Set `OPENBNK_BASE_URL` before running the installer to skip the question.
 
-To update, re-run the installer.
+To update, re-run the installer. It never overwrites an existing config file.
 
-To point at a different model server, set this in `~/.config/openbnk/openbnk.json`:
+## Model server
 
-```json
-{ "provider": { "bnk": { "options": { "baseURL": "http://my-server:8080/v1" } } } }
-```
+openbnk talks to any OpenAI-compatible server. In order of precedence, the URL comes from:
+
+1. `provider.bnk.options.baseURL` in a config file (`~/.config/openbnk/openbnk.json`, or a project's
+   `openbnk.json`):
+
+   ```json
+   { "provider": { "bnk": { "options": { "baseURL": "http://my-server:8080/v1" } } } }
+   ```
+
+2. the `OPENBNK_BASE_URL` environment variable, with or without the trailing `/v1`
+   (`OPENBNK_BASE_URL=http://my-server:8080 openbnk`).
+
+There is no built-in default. With neither set, no models are listed.
 
 ## Self-learning
 

@@ -84,10 +84,32 @@ case ":$PATH:" in
     ;;
 esac
 
+# First install only: ask which model server to use and save it to the global config.
+# OPENBNK_BASE_URL skips the question; an existing config file is never touched. With no answer,
+# nothing is saved and openbnk falls back to OPENBNK_BASE_URL at run time.
+CONFIG_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/openbnk/openbnk.json
+server=${OPENBNK_BASE_URL:-}
+if [ ! -f "$CONFIG_FILE" ]; then
+  if [ -z "$server" ] && [ -r /dev/tty ] && { : </dev/tty; } 2>/dev/null; then
+    printf '\033[38;5;214m==>\033[0m OpenAI-compatible model server URL (e.g. http://my-server:8080/v1): ' >/dev/tty
+    read -r server </dev/tty || true
+  fi
+  if [ -n "$server" ]; then
+    server=${server%/}
+    [[ "$server" == */v1 ]] || server="$server/v1"
+    curl -fsS --max-time 5 "$server/models" >/dev/null 2>&1 ||
+      printf '\033[0;33mwarning:\033[0m %s/models did not answer; saving it anyway\n' "$server" >&2
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+    printf '{ "provider": { "bnk": { "options": { "baseURL": "%s" } } } }\n' "$server" >"$CONFIG_FILE"
+    say "saved model server $server to $CONFIG_FILE"
+  fi
+fi
+server=$(grep -o '"baseURL"[^,}]*' "$CONFIG_FILE" 2>/dev/null | sed 's/.*: *"\(.*\)"/\1/')
+
 cat <<EOF
 
 Done. Run \`openbnk\` in a project directory to start.
-  Model server: http://10.0.75.254:8080/v1 (override: provider.bnk.options.baseURL in ~/.config/openbnk/openbnk.json)
+  Model server: ${server:-not set} (set: provider.bnk.options.baseURL in $CONFIG_FILE, or OPENBNK_BASE_URL)
   Learning:     openbnk learn list | memory | undo <id> | accept <id> | off
   Update:       re-run this installer
 EOF
