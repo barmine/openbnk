@@ -26,6 +26,8 @@ export const family = (ids: readonly (string | undefined)[]): Family | undefined
 }
 
 const off = (name: string) => ["0", "false", "off"].includes(process.env[name]?.toLowerCase() ?? "")
+/** False when the profile (or one named part of it) is switched off through the environment. */
+export const enabled = (name = "OPENBNK_PROFILE") => !off(name)
 
 export const defaults = (kind: Family, id: string): Record<string, unknown> => {
   const sampling = off("OPENBNK_PROFILE_SAMPLING")

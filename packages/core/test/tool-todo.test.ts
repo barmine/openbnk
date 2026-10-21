@@ -1,4 +1,4 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { Effect, Layer, Stream } from "effect"
 import { AppNodeBuilder } from "@openbnk/core/effect/app-node-builder"
 import { Config } from "@openbnk/core/config"
@@ -37,12 +37,33 @@ const names = (registry: Tool.Interface) =>
   toolDefinitions(registry).pipe(Effect.map((definitions) => definitions.map((definition) => definition.name)))
 
 describe("TodoTool", () => {
-  it.effect("is absent unless experimental.todo is enabled", () =>
+  it.effect("is on by default with the model profile", () =>
     Effect.gen(function* () {
-      expect(yield* names(yield* setup(undefined))).not.toContain(TodoTool.name)
+      expect(yield* names(yield* setup(undefined))).toContain(TodoTool.name)
+    }),
+  )
+
+  it.effect("is absent when experimental.todo is false", () =>
+    Effect.gen(function* () {
       expect(yield* names(yield* setup(new ConfigExperimental.Info({ todo: false })))).not.toContain(TodoTool.name)
     }),
   )
+
+  test("reminds the model about unfinished items only", () => {
+    expect(TodoTool.reminder(todos)).toBe(
+      [
+        "",
+        "",
+        "<system-reminder>",
+        "The current task still has unfinished todo items:",
+        "- [in_progress] Write tests",
+        "- [pending] Ship it",
+        "Keep the todo list current and continue the task. Do not treat a successful intermediate tool call as task completion.",
+        "</system-reminder>",
+      ].join("\n"),
+    )
+    expect(TodoTool.reminder([{ content: "Done", status: "completed" }])).toBe("")
+  })
 
   it.effect("registers todowrite on the native tool list and summarizes the update", () =>
     Effect.gen(function* () {
@@ -63,7 +84,9 @@ describe("TodoTool", () => {
         content: [
           {
             type: "text",
-            text: 'Todos updated: 1/4 completed, 1 in progress, 1 pending, 1 cancelled. In progress: "Write tests"',
+            text:
+              'Todos updated: 1/4 completed, 1 in progress, 1 pending, 1 cancelled. In progress: "Write tests"' +
+              TodoTool.reminder(todos),
           },
         ],
         metadata: { todos },

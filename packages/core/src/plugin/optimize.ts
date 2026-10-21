@@ -12,6 +12,8 @@ import PROMPT_KIMI from "./system-prompt/kimi.txt"
 import PROMPT_META from "./system-prompt/meta.txt"
 import PROMPT_TRINITY from "./system-prompt/trinity.txt"
 import PROMPT_ANTHROPIC from "./system-prompt/anthropic.txt"
+import PROMPT_QWEN from "./system-prompt/qwen.txt"
+import { ModelProfilePlugin } from "./model-profile.js"
 
 export const OpenAIPlugin = make("openbnk.prompt.openai", (model) => {
   const id = model.id.toLowerCase()
@@ -59,7 +61,14 @@ export const MetaPlugin = make("openbnk.prompt.meta", (model) => {
   return PROMPT_META.replaceAll("{{MODEL_NAME}}", model.name)
 })
 
-export const Plugins = [OpenAIPlugin, AnthropicPlugin, KimiPlugin, ArceePlugin, MetaPlugin] as const
+// Workflow, verification and finish-the-task guidance adapted from QwenLM/qwen-code (Apache-2.0). Without it
+// Qwen gets the short generic prompt. OPENBNK_PROFILE=0 or OPENBNK_PROFILE_PROMPT=0 keeps the generic prompt.
+export const QwenPlugin = make("openbnk.prompt.qwen", (model) => {
+  if (!ModelProfilePlugin.enabled() || !ModelProfilePlugin.enabled("OPENBNK_PROFILE_PROMPT")) return undefined
+  return ModelProfilePlugin.family([model.id, model.modelID, model.family]) === "qwen" ? PROMPT_QWEN : undefined
+})
+
+export const Plugins = [OpenAIPlugin, AnthropicPlugin, KimiPlugin, ArceePlugin, MetaPlugin, QwenPlugin] as const
 
 function make(
   id: string,

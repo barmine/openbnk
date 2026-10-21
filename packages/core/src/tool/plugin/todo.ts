@@ -6,6 +6,7 @@ import { Effect, Schema } from "effect"
 import { Config } from "../../config.js"
 import { ConfigEntryObserver } from "../../config/plugin/entry-observer.js"
 import { Permission } from "../../permission.js"
+import { ModelProfilePlugin } from "../../plugin/model-profile.js"
 import DESCRIPTION from "../todowrite.txt"
 
 export const name = "todowrite"
@@ -40,6 +41,22 @@ export const summarize = (todos: ReadonlyArray<Info>) => {
   return `Todos updated: ${counts}${active.length ? `. In progress: ${active.join(", ")}` : ""}`
 }
 
+// Adapted from QwenLM/qwen-code (Apache-2.0): a successful todo update is not the end of the task, and
+// mid-size models otherwise tend to stop right after one.
+export const reminder = (todos: ReadonlyArray<Info>) => {
+  const open = todos.filter((todo) => todo.status === "pending" || todo.status === "in_progress")
+  if (open.length === 0) return ""
+  return [
+    "",
+    "",
+    "<system-reminder>",
+    "The current task still has unfinished todo items:",
+    ...open.map((todo) => `- [${todo.status}] ${todo.content}`),
+    "Keep the todo list current and continue the task. Do not treat a successful intermediate tool call as task completion.",
+    "</system-reminder>",
+  ].join("\n")
+}
+
 export const Plugin = {
   id: "openbnk.tool.todo",
   effect: Effect.fn("TodoTool.Plugin")(function* (ctx: Context) {
@@ -47,7 +64,10 @@ export const Plugin = {
     const permission = yield* Permission.Service
     // Internal plugins are not re-run on config changes, so reload the tool transform instead.
     const loaded = yield* ConfigEntryObserver.observe(config, ctx.event, ctx.tool.reload())
-    const enabled = () => Config.latest(loaded.entries, "experimental")?.todo === true
+    // On by default with the model profile; `experimental.todo` overrides either way.
+    const enabled = () =>
+      Config.latest(loaded.entries, "experimental")?.todo ??
+      (ModelProfilePlugin.enabled() && ModelProfilePlugin.enabled("OPENBNK_PROFILE_TODO"))
 
     yield* ctx.tool
       .transform((editor) => {
@@ -72,7 +92,7 @@ export const Plugin = {
                 Effect.mapError((error) => new ToolFailure({ message: "Unable to update todos", error })),
                 Effect.as({
                   output: { todos: input.todos },
-                  content: summarize(input.todos),
+                  content: summarize(input.todos) + reminder(input.todos),
                   metadata: { todos: input.todos },
                 }),
               ),

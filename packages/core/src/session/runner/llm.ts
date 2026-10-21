@@ -1,8 +1,8 @@
 export * as SessionRunnerLLM from "./llm.js"
 
-import { Message } from "@openbnk/ai"
+import { LLMClient, LLMEvent, Message } from "@openbnk/ai"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
-import { Cause, Effect, Exit, FiberMap, Layer } from "effect"
+import { Cause, Effect, Exit, FiberMap, Layer, Stream } from "effect"
 import { Database } from "../../database/database.js"
 import { Bus } from "../../bus.js"
 import { LocationLifecycle } from "../../location-lifecycle.js"
@@ -28,6 +28,10 @@ import { llmClient } from "../../effect/app-node-platform.js"
 import { StepFailedError } from "../error.js"
 import { SessionRunnerRetry } from "./retry.js"
 import { SessionStep } from "./step.js"
+import { NextSpeaker } from "./next-speaker.js"
+import { ModelProfilePlugin } from "../../plugin/model-profile.js"
+import { LoopCheck } from "./loop-check.js"
+import { LeakedCall } from "./leaked-call.js"
 import { ToolOutput } from "../../tool-output.js"
 import { Plugin } from "../../plugin.js"
 import { MAX_STEPS_PROMPT } from "./max-steps.js"
@@ -36,7 +40,7 @@ const CONTINUE_AFTER_INCOMPLETE_STREAM =
   "The previous response was interrupted. Continue from where you left off without repeating completed content."
 
 const CONTINUE_AFTER_OUTPUT_LIMIT =
-  "Your last response hit the output token limit (stop reason: length). Do not apologize, recap, or repeat yourself. Break the remaining work into smaller pieces."
+  "Your last response hit the output token limit (stop reason: length). Resume directly. Do not apologize, recap, or repeat yourself; pick up mid-thought if that is where the cut happened. Break the remaining work into smaller pieces."
 
 const layer = Layer.effect(
   Service,
@@ -45,6 +49,7 @@ const layer = Layer.effect(
     const lifecycle = yield* LocationLifecycle.Service
     const store = yield* SessionStore.Service
     const context = yield* SessionContext.Service
+    const llm = yield* LLMClient.Service
     const modelTransport = yield* SessionModelTransport.Service
     const db = (yield* Database.Service).db
     const compaction = yield* SessionCompaction.Service
@@ -279,7 +284,48 @@ const layer = Layer.effect(
           ),
         })
         const completed = yield* SessionStep.Outcome.$match(outcome, {
-          Completed: (outcome) => Effect.succeed(outcome.needsContinuation),
+          Completed: Effect.fnUntraced(function* (outcome) {
+            if (outcome.needsContinuation) {
+              if (!LoopCheck.enabled()) return true
+              const warning = LoopCheck.check(yield* store.context(sessionID))
+              if (warning)
+                yield* bus.publish(SessionEvent.Synthetic, {
+                  sessionID,
+                  text: warning,
+                  description: "Warning: the same tool call repeated",
+                  metadata: { loopCheck: true },
+                })
+              return true
+            }
+            // Only for the model families the profile targets; other models are left as they are.
+            if (!NextSpeaker.enabled() || !ModelProfilePlugin.family([loaded.model.ref.id, loaded.model.model.id])) return false
+            // Input the user already sent takes over the turn.
+            if (yield* SessionInbox.nextPromotable(db, sessionID, "input")) return false
+            const messages = yield* store.context(sessionID)
+            const last = messages.findLast((message) => message.type === "assistant")
+            const leaked = last?.type === "assistant" ? LeakedCall.find(last, loaded.tools.definitions.map((tool) => tool.name)) : []
+            const repeat = messages.at(-2)?.type === "synthetic" && messages.at(-2)?.metadata?.leakedCall === true
+            if (leaked.length > 0 && !repeat) {
+              yield* bus.publish(SessionEvent.Synthetic, {
+                sessionID,
+                text: LeakedCall.prompt(leaked),
+                description: "Retry: a tool call was written as text",
+                metadata: { leakedCall: true },
+              })
+              return true
+            }
+            const decision = NextSpeaker.decide(messages)
+            const proceed =
+              decision.type === "continue" || (decision.type === "ask" && (yield* askNextSpeaker(loaded, decision.reply)))
+            if (!proceed) return false
+            yield* bus.publish(SessionEvent.Synthetic, {
+              sessionID,
+              text: NextSpeaker.CONTINUE,
+              description: "Continue: the reply announced work it had not started",
+              metadata: { nextSpeaker: true },
+            })
+            return true
+          }),
           Retry: (outcome) =>
             retry.wait({
               decision: outcome.decision,
@@ -335,6 +381,27 @@ const layer = Layer.effect(
         })
         if (completed !== undefined) return completed
       }
+    })
+
+    /** The next-speaker side query. It uses the title request path, which carries no tools or agent prompt. */
+    const askNextSpeaker = Effect.fn("SessionRunner.askNextSpeaker")(function* (
+      loaded: SessionContext.Loaded,
+      reply: string,
+    ) {
+      const prepared = yield* context.request.title({
+        session: loaded.session,
+        agent: loaded.agent.id,
+        model: loaded.model,
+        system: [],
+        messages: [Message.assistant(reply), Message.user(NextSpeaker.PROMPT)],
+      })
+      const chunks: string[] = []
+      yield* llm.stream(prepared.request, prepared.options).pipe(
+        Stream.runForEach((event) => Effect.sync(() => LLMEvent.is.textDelta(event) && chunks.push(event.text))),
+        Effect.timeout("90 seconds"),
+        Effect.catch(() => Effect.void),
+      )
+      return NextSpeaker.parse(chunks.join(""))
     })
 
     const settleStaleCompactions = Effect.fn("SessionRunner.settleStaleCompactions")(function* (

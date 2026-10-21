@@ -5618,7 +5618,7 @@ describe("SessionRunnerLLM", () => {
   for (const type of ["text", "reasoning"] as const) {
     scenario(`continues ${type} after an output token limit`, function* (s) {
       const nudge =
-        "Your last response hit the output token limit (stop reason: length). Do not apologize, recap, or repeat yourself. Break the remaining work into smaller pieces."
+        "Your last response hit the output token limit (stop reason: length). Resume directly. Do not apologize, recap, or repeat yourself; pick up mid-thought if that is where the cut happened. Break the remaining work into smaller pieces."
       const partial =
         type === "text"
           ? [
