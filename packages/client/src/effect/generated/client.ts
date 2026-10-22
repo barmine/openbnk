@@ -196,6 +196,18 @@ import type {
   CommandListOutput,
   SkillListInput,
   SkillListOutput,
+  LearningListInput,
+  LearningListOutput,
+  LearningRemoveInput,
+  LearningRemoveOutput,
+  LearningAcceptInput,
+  LearningAcceptOutput,
+  LearningRejectInput,
+  LearningRejectOutput,
+  LearningRevertInput,
+  LearningRevertOutput,
+  LearningEnabledInput,
+  LearningEnabledOutput,
   RpcCallInput,
   RpcCallOutput,
   EventSubscribeOutput,
@@ -1265,6 +1277,55 @@ const EndpointSkillList = (raw: RawClient["server.skill"]) => (input?: SkillList
 
 const adaptGroupSkill = (raw: RawClient["server.skill"]) => ({ list: EndpointSkillList(raw) })
 
+const EndpointLearningList = (raw: RawClient["server.learning"]) => (input?: LearningListInput) =>
+  preserveEffect<LearningListOutput>()(
+    raw["learning.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+  )
+
+const EndpointLearningRemove = (raw: RawClient["server.learning"]) => (input: LearningRemoveInput) =>
+  preserveEffect<LearningRemoveOutput>()(
+    raw["learning.remove"]({ query: { location: input["location"] }, payload: { id: input["id"] } }).pipe(
+      Effect.mapError(mapClientError),
+    ),
+  )
+
+const EndpointLearningAccept = (raw: RawClient["server.learning"]) => (input: LearningAcceptInput) =>
+  preserveEffect<LearningAcceptOutput>()(
+    raw["learning.accept"]({ query: { location: input["location"] }, payload: { id: input["id"] } }).pipe(
+      Effect.mapError(mapClientError),
+    ),
+  )
+
+const EndpointLearningReject = (raw: RawClient["server.learning"]) => (input: LearningRejectInput) =>
+  preserveEffect<LearningRejectOutput>()(
+    raw["learning.reject"]({ query: { location: input["location"] }, payload: { id: input["id"] } }).pipe(
+      Effect.mapError(mapClientError),
+    ),
+  )
+
+const EndpointLearningRevert = (raw: RawClient["server.learning"]) => (input: LearningRevertInput) =>
+  preserveEffect<LearningRevertOutput>()(
+    raw["learning.revert"]({ query: { location: input["location"] }, payload: { id: input["id"] } }).pipe(
+      Effect.mapError(mapClientError),
+    ),
+  )
+
+const EndpointLearningEnabled = (raw: RawClient["server.learning"]) => (input: LearningEnabledInput) =>
+  preserveEffect<LearningEnabledOutput>()(
+    raw["learning.enabled"]({ query: { location: input["location"] }, payload: { enabled: input["enabled"] } }).pipe(
+      Effect.mapError(mapClientError),
+    ),
+  )
+
+const adaptGroupLearning = (raw: RawClient["server.learning"]) => ({
+  list: EndpointLearningList(raw),
+  remove: EndpointLearningRemove(raw),
+  accept: EndpointLearningAccept(raw),
+  reject: EndpointLearningReject(raw),
+  revert: EndpointLearningRevert(raw),
+  enabled: EndpointLearningEnabled(raw),
+})
+
 const EndpointRpcCall = (raw: RawClient["server.rpc"]) => (input: RpcCallInput) =>
   preserveEffect<RpcCallOutput>()(
     raw["rpc.call"]({
@@ -1664,6 +1725,7 @@ const adaptClient = (raw: RawClient) => ({
   file: adaptGroupFile(raw["server.fs"]),
   command: adaptGroupCommand(raw["server.command"]),
   skill: adaptGroupSkill(raw["server.skill"]),
+  learning: adaptGroupLearning(raw["server.learning"]),
   rpc: adaptGroupRpc(raw["server.rpc"]),
   event: adaptGroupEvent(raw["server.event"]),
   pty: adaptGroupPty(raw["server.pty"]),

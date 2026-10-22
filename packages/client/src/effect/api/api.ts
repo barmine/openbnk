@@ -1834,6 +1834,242 @@ export interface SkillApi<E = never> {
   readonly list: SkillListOperation<E>
 }
 
+export type LearningListInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
+export type LearningListOutput = {
+  readonly enabled: boolean
+  readonly items: ReadonlyArray<{
+    readonly id: string
+    readonly kind: "user" | "notes" | "project" | "skill" | "proposal" | "accepted"
+    readonly name: string
+    readonly time: number | null
+    readonly content: string
+    readonly change: {
+      readonly id: string
+      readonly time: number
+      readonly kind: "memory" | "skill"
+      readonly label: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string | null
+      readonly status: "applied" | "undone"
+      readonly source: string
+    } | null
+    readonly proposal: {
+      readonly id: string
+      readonly time: number
+      readonly skill: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string
+      readonly reason: string
+      readonly status: "pending" | "accepted" | "rejected" | "reverted"
+      readonly source: string
+    } | null
+  }>
+}
+export type LearningListOperation<E = never> = (input?: LearningListInput) => Effect.Effect<LearningListOutput, E>
+
+export type LearningRemoveInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly id: string
+}
+export type LearningRemoveOutput = {
+  readonly enabled: boolean
+  readonly items: ReadonlyArray<{
+    readonly id: string
+    readonly kind: "user" | "notes" | "project" | "skill" | "proposal" | "accepted"
+    readonly name: string
+    readonly time: number | null
+    readonly content: string
+    readonly change: {
+      readonly id: string
+      readonly time: number
+      readonly kind: "memory" | "skill"
+      readonly label: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string | null
+      readonly status: "applied" | "undone"
+      readonly source: string
+    } | null
+    readonly proposal: {
+      readonly id: string
+      readonly time: number
+      readonly skill: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string
+      readonly reason: string
+      readonly status: "pending" | "accepted" | "rejected" | "reverted"
+      readonly source: string
+    } | null
+  }>
+}
+export type LearningRemoveOperation<E = never> = (input: LearningRemoveInput) => Effect.Effect<LearningRemoveOutput, E>
+
+export type LearningAcceptInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly id: string
+}
+export type LearningAcceptOutput = {
+  readonly enabled: boolean
+  readonly items: ReadonlyArray<{
+    readonly id: string
+    readonly kind: "user" | "notes" | "project" | "skill" | "proposal" | "accepted"
+    readonly name: string
+    readonly time: number | null
+    readonly content: string
+    readonly change: {
+      readonly id: string
+      readonly time: number
+      readonly kind: "memory" | "skill"
+      readonly label: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string | null
+      readonly status: "applied" | "undone"
+      readonly source: string
+    } | null
+    readonly proposal: {
+      readonly id: string
+      readonly time: number
+      readonly skill: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string
+      readonly reason: string
+      readonly status: "pending" | "accepted" | "rejected" | "reverted"
+      readonly source: string
+    } | null
+  }>
+}
+export type LearningAcceptOperation<E = never> = (input: LearningAcceptInput) => Effect.Effect<LearningAcceptOutput, E>
+
+export type LearningRejectInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly id: string
+}
+export type LearningRejectOutput = {
+  readonly enabled: boolean
+  readonly items: ReadonlyArray<{
+    readonly id: string
+    readonly kind: "user" | "notes" | "project" | "skill" | "proposal" | "accepted"
+    readonly name: string
+    readonly time: number | null
+    readonly content: string
+    readonly change: {
+      readonly id: string
+      readonly time: number
+      readonly kind: "memory" | "skill"
+      readonly label: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string | null
+      readonly status: "applied" | "undone"
+      readonly source: string
+    } | null
+    readonly proposal: {
+      readonly id: string
+      readonly time: number
+      readonly skill: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string
+      readonly reason: string
+      readonly status: "pending" | "accepted" | "rejected" | "reverted"
+      readonly source: string
+    } | null
+  }>
+}
+export type LearningRejectOperation<E = never> = (input: LearningRejectInput) => Effect.Effect<LearningRejectOutput, E>
+
+export type LearningRevertInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly id: string
+}
+export type LearningRevertOutput = {
+  readonly enabled: boolean
+  readonly items: ReadonlyArray<{
+    readonly id: string
+    readonly kind: "user" | "notes" | "project" | "skill" | "proposal" | "accepted"
+    readonly name: string
+    readonly time: number | null
+    readonly content: string
+    readonly change: {
+      readonly id: string
+      readonly time: number
+      readonly kind: "memory" | "skill"
+      readonly label: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string | null
+      readonly status: "applied" | "undone"
+      readonly source: string
+    } | null
+    readonly proposal: {
+      readonly id: string
+      readonly time: number
+      readonly skill: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string
+      readonly reason: string
+      readonly status: "pending" | "accepted" | "rejected" | "reverted"
+      readonly source: string
+    } | null
+  }>
+}
+export type LearningRevertOperation<E = never> = (input: LearningRevertInput) => Effect.Effect<LearningRevertOutput, E>
+
+export type LearningEnabledInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly enabled: boolean
+}
+export type LearningEnabledOutput = {
+  readonly enabled: boolean
+  readonly items: ReadonlyArray<{
+    readonly id: string
+    readonly kind: "user" | "notes" | "project" | "skill" | "proposal" | "accepted"
+    readonly name: string
+    readonly time: number | null
+    readonly content: string
+    readonly change: {
+      readonly id: string
+      readonly time: number
+      readonly kind: "memory" | "skill"
+      readonly label: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string | null
+      readonly status: "applied" | "undone"
+      readonly source: string
+    } | null
+    readonly proposal: {
+      readonly id: string
+      readonly time: number
+      readonly skill: string
+      readonly path: string
+      readonly before: string | null
+      readonly after: string
+      readonly reason: string
+      readonly status: "pending" | "accepted" | "rejected" | "reverted"
+      readonly source: string
+    } | null
+  }>
+}
+export type LearningEnabledOperation<E = never> = (
+  input: LearningEnabledInput,
+) => Effect.Effect<LearningEnabledOutput, E>
+
+export interface LearningApi<E = never> {
+  readonly list: LearningListOperation<E>
+  readonly remove: LearningRemoveOperation<E>
+  readonly accept: LearningAcceptOperation<E>
+  readonly reject: LearningRejectOperation<E>
+  readonly revert: LearningRevertOperation<E>
+  readonly enabled: LearningEnabledOperation<E>
+}
+
 export type RpcCallInput = {
   readonly rpcID: string
   readonly method: string
@@ -2326,6 +2562,7 @@ export interface AppApi<E = never> {
   readonly file: FileApi<E>
   readonly command: CommandApi<E>
   readonly skill: SkillApi<E>
+  readonly learning: LearningApi<E>
   readonly rpc: RpcApi<E>
   readonly event: EventApi<E>
   readonly pty: PtyApi<E>

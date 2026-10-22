@@ -194,6 +194,18 @@ import type {
   CommandListOutput,
   SkillListInput,
   SkillListOutput,
+  LearningListInput,
+  LearningListOutput,
+  LearningRemoveInput,
+  LearningRemoveOutput,
+  LearningAcceptInput,
+  LearningAcceptOutput,
+  LearningRejectInput,
+  LearningRejectOutput,
+  LearningRevertInput,
+  LearningRevertOutput,
+  LearningEnabledInput,
+  LearningEnabledOutput,
   RpcCallInput,
   RpcCallOutput,
   EventSubscribeOutput,
@@ -1723,6 +1735,85 @@ export function make(options: ClientOptions) {
             method: "GET",
             path: `/api/skill`,
             query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    learning: {
+      list: (input?: LearningListInput, requestOptions?: RequestOptions) =>
+        request<LearningListOutput>(
+          {
+            method: "GET",
+            path: `/api/learning`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: LearningRemoveInput, requestOptions?: RequestOptions) =>
+        request<LearningRemoveOutput>(
+          {
+            method: "POST",
+            path: `/api/learning/remove`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      accept: (input: LearningAcceptInput, requestOptions?: RequestOptions) =>
+        request<LearningAcceptOutput>(
+          {
+            method: "POST",
+            path: `/api/learning/accept`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      reject: (input: LearningRejectInput, requestOptions?: RequestOptions) =>
+        request<LearningRejectOutput>(
+          {
+            method: "POST",
+            path: `/api/learning/reject`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      revert: (input: LearningRevertInput, requestOptions?: RequestOptions) =>
+        request<LearningRevertOutput>(
+          {
+            method: "POST",
+            path: `/api/learning/revert`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401, 404],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      enabled: (input: LearningEnabledInput, requestOptions?: RequestOptions) =>
+        request<LearningEnabledOutput>(
+          {
+            method: "POST",
+            path: `/api/learning/enabled`,
+            query: { location: input["location"] },
+            body: { enabled: input["enabled"] },
             successStatus: 200,
             declaredStatuses: [400, 401, 404],
             empty: false,

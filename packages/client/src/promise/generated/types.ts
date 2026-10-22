@@ -254,6 +254,30 @@ export type PermissionSavedID = string
 
 export type CommandInfo = { name: string; description?: string }
 
+export type LearningChange = {
+  id: string
+  time: number
+  kind: "memory" | "skill"
+  label: string
+  path: string
+  before: string | null
+  after: string | null
+  status: "applied" | "undone"
+  source: string
+}
+
+export type LearningProposal = {
+  id: string
+  time: number
+  skill: string
+  path: string
+  before: string | null
+  after: string
+  reason: string
+  status: "pending" | "accepted" | "rejected" | "reverted"
+  source: string
+}
+
 export type RpcOutput = { output?: any }
 
 export type PermissionReply = "once" | "always" | "reject"
@@ -736,6 +760,16 @@ export type PermissionSavedInfo = {
   action: string
   resource: string
   time: { created: number; updated: number }
+}
+
+export type LearningItem = {
+  id: string
+  kind: "user" | "notes" | "project" | "skill" | "proposal" | "accepted"
+  name: string
+  time: number | null
+  content: string
+  change: LearningChange | null
+  proposal: LearningProposal | null
 }
 
 export type Pty = {
@@ -1984,6 +2018,8 @@ export type VoiceSessionResponse = { data: { transport: VoiceTransport } }
 export type CredentialValue = CredentialOAuth | CredentialKey | CredentialExternal
 
 export type ConnectionInfo = ConnectionCredentialInfo | ConnectionEnvInfo
+
+export type LearningState = { enabled: boolean; items: Array<LearningItem> }
 
 export type PtyCreated = {
   id: EventID
@@ -5565,6 +5601,47 @@ export type SkillListInput = {
 }
 
 export type SkillListOutput = { location: LocationPublicRef; data: Array<SkillInfo> }
+
+export type LearningListInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type LearningListOutput = LearningState
+
+export type LearningRemoveInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type LearningRemoveOutput = LearningState
+
+export type LearningAcceptInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type LearningAcceptOutput = LearningState
+
+export type LearningRejectInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type LearningRejectOutput = LearningState
+
+export type LearningRevertInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type LearningRevertOutput = LearningState
+
+export type LearningEnabledInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly enabled: { readonly enabled: boolean }["enabled"]
+}
+
+export type LearningEnabledOutput = LearningState
 
 export type RpcCallInput = {
   readonly rpcID: { readonly rpcID: string; readonly method: string }["rpcID"]
