@@ -10,6 +10,7 @@ import Notifications from "../feature-plugins/system/notifications"
 import Plugins from "../feature-plugins/system/plugins"
 import Storybook from "../feature-plugins/system/storybook"
 import Stats from "../feature-plugins/system/stats"
+import Learnings from "../feature-plugins/system/learnings"
 import Latex from "@openbnk/latex/plugin"
 import Merman from "@openbnk/merman/plugin"
 
@@ -24,6 +25,7 @@ export const builtins = [
   Notifications,
   Plugins,
   Stats,
+  Learnings,
   Merman,
   Latex,
   // The storybook is a development tool; keep its route and palette commands out of
