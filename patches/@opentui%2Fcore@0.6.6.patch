@@ -1,0 +1,26 @@
+diff --git a/chunk-bun-6qjat6qa.js b/chunk-bun-6qjat6qa.js
+index f19fdead13463e5f0aabd55910cefef6a2fb7165..dc24e09827bd22aa44fd37b090217e321272837b 100644
+--- a/chunk-bun-6qjat6qa.js
++++ b/chunk-bun-6qjat6qa.js
+@@ -6475,7 +6475,7 @@ class StdinParser2 {
+       } catch (error) {
+         console.error("stdin parser timeout flush failed", error);
+       }
+-    }, this.timeoutMs);
++    }, this.state.tag === "osc" || this.state.tag === "dcs" || this.state.tag === "apc" ? 1000 : this.timeoutMs);
+   }
+   clearTimeout() {
+     if (!this.timeoutId) {
+diff --git a/chunk-node-2rg7pskw.js b/chunk-node-2rg7pskw.js
+index f2b77652fe2ee3d9dc41f49ed7570a2ea1d50715..ad3f91ae2b7a373cab83c12216e4d6cfb0ceeeb9 100644
+--- a/chunk-node-2rg7pskw.js
++++ b/chunk-node-2rg7pskw.js
+@@ -6474,7 +6474,7 @@ class StdinParser2 {
+       } catch (error) {
+         console.error("stdin parser timeout flush failed", error);
+       }
+-    }, this.timeoutMs);
++    }, this.state.tag === "osc" || this.state.tag === "dcs" || this.state.tag === "apc" ? 1000 : this.timeoutMs);
+   }
+   clearTimeout() {
+     if (!this.timeoutId) {
