@@ -71,4 +71,71 @@ describe("learning store", () => {
       LearningStore.writeSkill(config, { name: "bad", content: "no frontmatter", reason: "r" }, "t"),
     ).toThrow("frontmatter")
   })
+
+  const ownSkill = (version: string) => {
+    const file = path.join(config, "skills", "mine", "SKILL.md")
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(file, skill("mine", "v1"))
+    const outcome = LearningStore.writeSkill(
+      config,
+      { name: "mine", file, content: skill("mine", version), reason: "why" },
+      "t",
+    )
+    return { file, id: outcome?.type === "proposal" ? outcome.proposal.id : "" }
+  }
+
+  test("items lists what is in effect, newest first", () => {
+    LearningStore.applyMemory(config, { action: "add", target: "user", content: "Serve dev servers on the LAN" }, "t")
+    LearningStore.applyMemory(config, { action: "add", target: "notes", content: "Background shells get reaped" }, "t")
+    LearningStore.writeSkill(config, { name: "lan-server", content: skill("lan-server", "go"), reason: "r" }, "t")
+    const pending = ownSkill("v2")
+    const items = LearningStore.items(config)
+    expect(items.map((item) => item.kind).toSorted()).toEqual(["notes", "proposal", "skill", "user"])
+    expect(items.find((item) => item.kind === "user")?.name).toBe("Serve dev servers on the LAN")
+    expect(items.find((item) => item.kind === "user")?.change?.label).toContain("remembered")
+    expect(items.find((item) => item.kind === "proposal")?.proposal?.reason).toBe("why")
+    LearningStore.resolveProposal(config, pending.id, false)
+    expect(LearningStore.items(config).some((item) => item.kind === "proposal")).toBe(false)
+  })
+
+  test("project memory is scoped to its project", () => {
+    expect(() => LearningStore.memoryFile(config, "project", "global")).toThrow()
+    expect(() => LearningStore.memoryFile(config, "project")).toThrow()
+    LearningStore.applyMemory(config, { action: "add", target: "project", content: "Click ripples" }, "t", "p1")
+    expect(LearningStore.entries(config, "project", "p1")).toEqual(["Click ripples"])
+    expect(LearningStore.items(config, "p1").map((item) => item.kind)).toEqual(["project"])
+    expect(LearningStore.items(config, "p2")).toEqual([])
+    expect(LearningStore.items(config)).toEqual([])
+  })
+
+  test("removeItem removes one entry even after a hand edit", () => {
+    for (const content of ["one", "two", "three"])
+      LearningStore.applyMemory(config, { action: "add", target: "user", content }, "t")
+    const file = LearningStore.memoryFile(config, "user")
+    fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace("one", "one edited"))
+    const two = LearningStore.items(config).find((item) => item.content === "two")!
+    LearningStore.removeItem(config, two.id)
+    expect(LearningStore.entries(config, "user")).toEqual(["one edited", "three"])
+    const learned = LearningStore.writeSkill(config, { name: "gone", content: skill("gone", "x"), reason: "r" }, "t")
+    expect(learned?.type).toBe("applied")
+    LearningStore.removeItem(config, "skill:gone")
+    expect(LearningStore.learnedSkills(config)).toEqual([])
+  })
+
+  test("accepted proposals stay listed until reverted", () => {
+    const own = ownSkill("v2")
+    LearningStore.resolveProposal(config, own.id, true)
+    expect(LearningStore.items(config).map((item) => item.kind)).toEqual(["accepted"])
+    LearningStore.revertAccepted(config, own.id)
+    expect(fs.readFileSync(own.file, "utf8")).toContain("v1")
+    expect(LearningStore.items(config)).toEqual([])
+  })
+
+  test("revert refuses after the skill was edited", () => {
+    const own = ownSkill("v2")
+    LearningStore.resolveProposal(config, own.id, true)
+    fs.writeFileSync(own.file, skill("mine", "v3"))
+    expect(() => LearningStore.revertAccepted(config, own.id)).toThrow("edited since")
+    expect(fs.readFileSync(own.file, "utf8")).toContain("v3")
+  })
 })

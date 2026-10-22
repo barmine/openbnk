@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto"
 
 // Everything the self-learning loop persists lives under the global config dir:
 //   learning/memory/{USER,NOTES}.md   curated memory, injected into every session
+//   learning/projects/<id>/NOTES.md   project memory, injected only into that project's sessions
 //   learning/history/<id>.json        every applied change, kept for undo
 //   learning/proposals/<id>.json      pending changes to skills the user owns
 //   skills/learned/<name>/SKILL.md    agent-written skills, discovered by the normal skill loader
@@ -14,7 +15,8 @@ export const DELIMITER = "\n§\n"
 
 export const targets = {
   user: { file: "USER.md", limit: 1500, title: "What I know about the user" },
-  notes: { file: "NOTES.md", limit: 2500, title: "My notes about the environment and projects" },
+  notes: { file: "NOTES.md", limit: 2500, title: "My notes about the environment" },
+  project: { file: "NOTES.md", limit: 2000, title: "My notes about this project" },
 } as const
 export type Target = keyof typeof targets
 
@@ -38,7 +40,7 @@ export type Proposal = {
   readonly before: string | null
   readonly after: string
   readonly reason: string
-  readonly status: "pending" | "accepted" | "rejected"
+  readonly status: "pending" | "accepted" | "rejected" | "reverted"
   readonly source: string
 }
 
@@ -47,13 +49,19 @@ export class LearningError extends Error {}
 export const paths = (config: string) => ({
   root: path.join(config, "learning"),
   memory: path.join(config, "learning", "memory"),
+  projects: path.join(config, "learning", "projects"),
   history: path.join(config, "learning", "history"),
   proposals: path.join(config, "learning", "proposals"),
   learned: path.join(config, "skills", "learned"),
   disabled: path.join(config, "learning", "disabled"),
 })
 
-export const memoryFile = (config: string, target: Target) => path.join(paths(config).memory, targets[target].file)
+/** The project target needs a real project; the shared global project would leak notes across directories. */
+export const memoryFile = (config: string, target: Target, projectID?: string) => {
+  if (target !== "project") return path.join(paths(config).memory, targets[target].file)
+  if (!projectID || projectID === "global") throw new LearningError("Project memory needs a project (a git repository)")
+  return path.join(paths(config).projects, projectID, targets.project.file)
+}
 
 export const enabled = (config: string) =>
   !fs.existsSync(paths(config).disabled) && !["0", "false"].includes(process.env.OPENBNK_LEARNING ?? "")
@@ -91,8 +99,8 @@ const listJson = <T>(directory: string) =>
 
 // Memory -------------------------------------------------------------------
 
-export const entries = (config: string, target: Target) => {
-  const content = read(memoryFile(config, target))
+export const entries = (config: string, target: Target, projectID?: string) => {
+  const content = read(memoryFile(config, target, projectID))
   if (!content) return []
   return content
     .replace(/^# .*\n+/, "")
@@ -109,11 +117,13 @@ export type MemoryAction =
   | { readonly action: "replace"; readonly target: Target; readonly match: string; readonly content: string }
   | { readonly action: "remove"; readonly target: Target; readonly match: string }
 
-export const applyMemory = (config: string, input: MemoryAction, source: string) => {
-  const file = memoryFile(config, input.target)
+export const applyMemory = (config: string, input: MemoryAction, source: string, projectID?: string) => {
+  const file = memoryFile(config, input.target, projectID)
   const before = read(file)
-  const items = entries(config, input.target)
+  const items = entries(config, input.target, projectID)
   const find = (match: string) => {
+    const exact = items.indexOf(match.trim())
+    if (exact >= 0) return exact
     const hits = items.flatMap((item, index) => (item.includes(match) ? [index] : []))
     if (hits.length === 0) throw new LearningError(`No ${input.target} memory entry contains "${match}"`)
     if (hits.length > 1) throw new LearningError(`"${match}" matches ${hits.length} entries; use a longer match`)
@@ -278,4 +288,103 @@ export const resolveProposal = (config: string, prefix: string, accept: boolean)
   const updated: Proposal = { ...proposal, status: accept ? "accepted" : "rejected" }
   write(path.join(paths(config).proposals, `${proposal.id}.json`), JSON.stringify(updated, null, 2))
   return updated
+}
+
+// Items: what is in effect now, for the Learnings screen ---------------------
+
+export type Item = {
+  readonly id: string
+  readonly kind: Target | "skill" | "proposal" | "accepted"
+  readonly name: string
+  readonly time: number | null
+  readonly content: string
+  readonly change: Change | null
+  readonly proposal: Proposal | null
+}
+
+export const items = (config: string, projectID?: string): Item[] => {
+  const applied = changes(config).filter((change) => change.status === "applied")
+  const hasProject = Boolean(projectID) && projectID !== "global"
+  const memory = (["user", "notes", ...(hasProject ? (["project"] as const) : [])] as const).flatMap((target) => {
+    const file = memoryFile(config, target, projectID)
+    return entries(config, target, projectID).map((content, index): Item => {
+      // The change that introduced the entry: the one whose result has it and whose starting point did not.
+      const change =
+        applied.find(
+          (item) => item.path === file && item.after?.includes(content) && !item.before?.includes(content),
+        ) ?? null
+      return {
+        id: `mem:${target}:${index}`,
+        kind: target,
+        name: firstLine(content),
+        time: change?.time ?? null,
+        content,
+        change,
+        proposal: null,
+      }
+    })
+  })
+  const skills = learnedSkills(config).map((skill): Item => {
+    const change = applied.find((item) => item.path === skill.file) ?? null
+    return {
+      id: `skill:${skill.name}`,
+      kind: "skill",
+      name: skill.name,
+      time: change?.time ?? null,
+      content: skill.content,
+      change,
+      proposal: null,
+    }
+  })
+  const listed = proposals(config)
+    .filter((proposal) => proposal.status === "pending" || proposal.status === "accepted")
+    .map(
+      (proposal): Item => ({
+        id: `proposal:${proposal.id}`,
+        kind: proposal.status === "pending" ? "proposal" : "accepted",
+        name: proposal.skill,
+        time: proposal.time,
+        content: proposal.after,
+        change: null,
+        proposal,
+      }),
+    )
+  return [...memory, ...skills, ...listed].toSorted((a, b) => (b.time ?? -Infinity) - (a.time ?? -Infinity))
+}
+
+const firstLine = (content: string) => content.split("\n")[0]!.slice(0, 60)
+
+/** Removes one memory entry or learned skill by its item ID; the removal is recorded like any change. */
+export const removeItem = (config: string, itemID: string, projectID?: string, source = "user") => {
+  const item = items(config, projectID).find((entry) => entry.id === itemID)
+  if (!item) throw new LearningError(`No learning "${itemID}"`)
+  if (item.kind === "skill") {
+    const outcome = writeSkill(config, { name: item.name, content: null, reason: "removed by the user" }, source)
+    return outcome?.type === "applied" ? outcome.change : undefined
+  }
+  if (item.kind === "proposal" || item.kind === "accepted")
+    throw new LearningError("Proposals are accepted, rejected or reverted, not removed")
+  return applyMemory(config, { action: "remove", target: item.kind, match: item.content }, source, projectID)
+}
+
+/** Restores a user-owned skill to its content before an accepted proposal, unless it was edited since. */
+export const revertAccepted = (config: string, prefix: string) => {
+  const proposal = findByPrefix(proposals(config), prefix)
+  if (proposal.status !== "accepted") throw new LearningError(`Proposal is ${proposal.status}, not accepted`)
+  if (read(proposal.path) !== proposal.after)
+    throw new LearningError("Skill was edited since you accepted this change; revert it by hand")
+  write(proposal.path, proposal.before)
+  const change = record(config, {
+    kind: "skill",
+    label: `reverted accepted change to skill "${proposal.skill}"`,
+    path: proposal.path,
+    before: proposal.after,
+    after: proposal.before,
+    source: "user",
+  })
+  write(
+    path.join(paths(config).proposals, `${proposal.id}.json`),
+    JSON.stringify({ ...proposal, status: "reverted" }, null, 2),
+  )
+  return change
 }
