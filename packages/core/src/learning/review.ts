@@ -29,15 +29,18 @@ export class Service extends Context.Service<Service, Interface>()("@openbnk/Lea
 const SYSTEM = `You are the learning reviewer for a coding agent. You read a finished stretch of conversation between the user and the agent, and decide what the agent should carry into future sessions. You never talk to the user; you only output a JSON object.
 
 There are two stores:
-1. MEMORY (short, always loaded into every future session):
-   - "user": who the user is - preferences, corrections, communication style, their setup.
-   - "notes": durable facts about the environment, tools, and project conventions.
-   Save only what will still matter in a future session. Never save task progress, one-off details, secrets, or things already stated in the existing memory.
-2. SKILLS (loaded on demand): instructions for doing a CLASS of task the most efficient and correct way for THIS user.
+1. MEMORY (short, always loaded into future sessions). Three targets:
+   - "user": preferences about how the user wants the agent to work, in EVERY project. Save one ONLY when the user states it as general ("always", "I prefer", "remember this", "from now on", "don't ever"), or when session_search-style evidence in the conversation shows the same preference in an earlier session. A request for a feature in this task is NOT a preference about the user.
+   - "notes": facts about the environment and tools that hold across projects.
+   - "project": choices and conventions of the current project only. Only use it when a "project" section appears under Current memory.
+   Test: if the user would be surprised to see it applied in a different project, it is not "user".
+   Never save task progress, one-off details, secrets, or things already in memory.
+2. SKILLS (loaded on demand): instructions for a CLASS of task that transfers to other tasks.
+   - Never create a skill for the task itself, a one-off build, a demo, or a prompt that looks like a test of the agent (for example "make an ASCII shader page", "build a snake game").
    - Procedure first: the steps in order, with concrete commands and decision points. Pitfalls attach to the step they affect.
    - A pitfall is a general rule plus a short why, in the imperative. Not a story of what happened this session.
    - No dates, ticket numbers, or quotes as content. The same lesson twice is one rule.
-   - Prefer, in order: update a skill that was used in this conversation; update an existing learned skill that covers the territory; create a new class-level skill. Never create a narrow one-session skill.
+   - Prefer, in order: update a skill that was used in this conversation; update an existing learned skill that covers the territory; create a new class-level skill.
    - A skill is a full markdown file starting with frontmatter:
      ---
      name: kebab-case-name
@@ -45,13 +48,13 @@ There are two stores:
      ---
 
 Signals worth acting on:
-- The user corrected the agent's style, format, verbosity, workflow, or approach ("don't do X", "always Y", "remember this"). These are the most important signals.
-- A non-trivial technique, fix, workaround, or command sequence emerged that a future session would benefit from.
+- The user corrected the agent's style, format, workflow, or approach in a way meant to last ("don't do X", "always Y", "remember this").
+- A non-trivial, reusable technique, fix, or workaround emerged that a future session in a different task would benefit from.
 - A skill that was used turned out wrong, incomplete, or outdated.
-If none of these occurred, output empty lists. Doing nothing is better than saving noise.
+Most reviews should output empty lists. Doing nothing is better than saving noise.
 
 Output ONLY a JSON object, no prose, in this shape:
-{"memory":[{"action":"add","target":"user|notes","content":"..."},{"action":"replace","target":"user|notes","match":"unique substring of existing entry","content":"..."},{"action":"remove","target":"user|notes","match":"..."}],
+{"memory":[{"action":"add","target":"user|notes|project","content":"..."},{"action":"replace","target":"user|notes","match":"unique substring of existing entry","content":"..."},{"action":"remove","target":"user|notes","match":"..."}],
  "skills":[{"action":"create|update","name":"skill-name","content":"full SKILL.md","reason":"one sentence"}]}`
 
 type Operations = {
@@ -84,7 +87,7 @@ export const parse = (text: string): Operations | undefined => {
   if (decoded._tag === "None") return undefined
   const memory = (decoded.value.memory ?? []).flatMap((item): LearningStore.MemoryAction[] => {
     const op = item as Record<string, unknown>
-    const target = op.target === "user" || op.target === "notes" ? op.target : undefined
+    const target = op.target === "user" || op.target === "notes" || op.target === "project" ? op.target : undefined
     if (!target) return []
     const content = typeof op.content === "string" ? op.content : ""
     const match = typeof op.match === "string" ? op.match : ""
@@ -183,9 +186,10 @@ export const layer = Layer.effect(
       const selection = yield* context.selectTitle(session)
       const model = selection?.primary ?? selection?.selected
       if (!selection || !model) return
-      const memory = (["user", "notes"] as const)
+      const projectID = session.projectID === "global" ? undefined : session.projectID
+      const memory = (["user", "notes", ...(projectID ? (["project"] as const) : [])] as const)
         .map((target) => {
-          const items = LearningStore.entries(config, target)
+          const items = LearningStore.entries(config, target, projectID)
           return `${target}:\n${items.length ? items.map((item) => `- ${item}`).join("\n") : "(empty)"}`
         })
         .join("\n\n")
@@ -217,7 +221,7 @@ export const layer = Layer.effect(
       const source = `review:${sessionID}`
       const notices: string[] = []
       for (const op of ops.memory ?? []) {
-        const change = yield* Effect.try(() => LearningStore.applyMemory(config, op, source)).pipe(
+        const change = yield* Effect.try(() => LearningStore.applyMemory(config, op, source, projectID)).pipe(
           Effect.tapError((error) => Effect.logInfo("learning memory op skipped", { error: String(error) })),
           Effect.orElseSucceed(() => undefined),
         )

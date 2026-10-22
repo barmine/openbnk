@@ -41,7 +41,12 @@ export const Plugin = define({
       const stop = FSUtil.contains(home, start) ? home : root
       const globalFile = yield* fs.resolve(join(global.config, "AGENTS.md"))
       // Self-learning memory is loaded with the global instructions so every session starts with it.
-      const memoryFiles = (["user", "notes"] as const).map((target) => LearningStore.memoryFile(global.config, target))
+      const memoryFiles = [
+        ...(["user", "notes"] as const).map((target) => LearningStore.memoryFile(global.config, target)),
+        ...(location.project.id === "global"
+          ? []
+          : [LearningStore.memoryFile(global.config, "project", location.project.id)]),
+      ]
       const loaded: { current: Loaded } = { current: { type: "available", files: [] } }
       const configured: { sources: string[]; remote: Map<string, InstructionDiscovery.File> } = {
         sources: [],

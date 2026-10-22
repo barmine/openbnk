@@ -10,6 +10,12 @@ describe("learning review parse", () => {
     expect(ops?.skills?.map((skill) => skill.name)).toEqual(["a"])
   })
 
+  test("keeps project memory operations", () => {
+    expect(LearningReview.parse('{"memory":[{"action":"add","target":"project","content":"x"}]}')?.memory).toEqual([
+      { action: "add", target: "project", content: "x" },
+    ])
+  })
+
   test("returns undefined for non-JSON output", () => {
     expect(LearningReview.parse("Nothing to save.")).toBe(undefined)
   })

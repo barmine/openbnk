@@ -6,15 +6,16 @@ import { TuiEvent } from "@openbnk/schema/tui-event"
 import { Global } from "@openbnk/util/global"
 import { Effect, Schema } from "effect"
 import { Bus } from "../../bus.js"
+import { Location } from "../../location.js"
 import { LearningSearch } from "../../learning/search.js"
 import { LearningStore } from "@openbnk/util/learning-store"
 import { Skill } from "../../skill.js"
 
 export const MemoryInput = Schema.Struct({
   action: Schema.Literals(["add", "replace", "remove"]),
-  target: Schema.Literals(["user", "notes"]).annotate({
+  target: Schema.Literals(["user", "notes", "project"]).annotate({
     description:
-      "user: who the user is, their preferences and style. notes: environment facts, project quirks, conventions.",
+      "user: preferences the user stated as general, for every project. notes: environment facts true across projects. project: choices and conventions of the current project only.",
   }),
   content: Schema.optional(Schema.String).annotate({ description: "The entry text, for add and replace" }),
   match: Schema.optional(Schema.String).annotate({
@@ -41,7 +42,8 @@ const Output = Schema.Struct({ result: Schema.String })
 
 export const memoryDescription = [
   "Save durable facts to persistent memory that is loaded into every future session.",
-  "Use target=user for the user's preferences, corrections, style and setup; target=notes for environment facts, tool quirks and project conventions.",
+  "Use target=user only for preferences the user states as general (always, I prefer, remember); target=notes for environment facts true across projects; target=project for choices and conventions of this project only.",
+  "If the user would be surprised to see it applied in a different project, it is not target=user.",
   "Save only what will still matter in future sessions. Do not save task progress or anything already in AGENTS.md.",
   "Memory is size-limited: when full, replace or remove stale entries to consolidate.",
   "Changes take effect from the next session.",
@@ -64,6 +66,7 @@ export const Plugin = {
     const bus = yield* Bus.Service
     const skills = yield* Skill.Service
     const search = yield* LearningSearch.Service
+    const location = yield* Location.Service
     const config = global.config
     const fail = (message: string) => (error: unknown) =>
       new ToolFailure({ message: error instanceof LearningStore.LearningError ? error.message : message, error })
@@ -97,7 +100,7 @@ export const Plugin = {
               if (action.action !== "remove" && !action.content.trim())
                 return yield* new ToolFailure({ message: "content is required" })
               const change = yield* Effect.try({
-                try: () => LearningStore.applyMemory(config, action, "agent"),
+                try: () => LearningStore.applyMemory(config, action, "agent", location.project.id),
                 catch: fail("Unable to update memory"),
               })
               if (change) yield* notify(`${change.label} · undo: openbnk learn undo ${change.id}`)

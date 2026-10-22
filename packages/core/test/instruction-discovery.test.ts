@@ -226,6 +226,8 @@ describe("ConfigInstructionPlugin.Plugin", () => {
           const watcher = yield* Watcher.Test
           expect(yield* watcher.subscriptions()).toEqual([
             { path: globalFile, type: "file" },
+            { path: path.join(global, "learning", "memory", "USER.md"), type: "file" },
+            { path: path.join(global, "learning", "memory", "NOTES.md"), type: "file" },
             { path: packageFile, type: "file" },
             { path: path.join(project, "packages", "AGENTS.md"), type: "file" },
             { path: projectFile, type: "file" },
@@ -505,6 +507,8 @@ describe("ConfigInstructionPlugin.Plugin", () => {
           const watcher = yield* Watcher.Test
           expect(yield* watcher.subscriptions()).toEqual([
             { path: path.join(global, "AGENTS.md"), type: "file" },
+            { path: path.join(global, "learning", "memory", "USER.md"), type: "file" },
+            { path: path.join(global, "learning", "memory", "NOTES.md"), type: "file" },
             { path: path.join(directory, "AGENTS.md"), type: "file" },
             { path: path.join(project, "packages", "AGENTS.md"), type: "file" },
             { path: path.join(project, "AGENTS.md"), type: "file" },
