@@ -73,7 +73,10 @@ binary=$(find "$out" -path '*/bin/openbnk' -type f | head -n 1)
 [ -n "$binary" ] || die "build finished but no binary was produced"
 
 mkdir -p "$BIN_DIR"
-install -m 0755 "$binary" "$BIN_DIR/openbnk.new"
+# Not `install -m`: with `.` or an empty entry on PATH (common for root), `install` resolves to this
+# script in the checkout and re-runs it forever.
+cp "$binary" "$BIN_DIR/openbnk.new"
+chmod 0755 "$BIN_DIR/openbnk.new"
 mv -f "$BIN_DIR/openbnk.new" "$BIN_DIR/openbnk"
 say "installed $("$BIN_DIR/openbnk" --version) to $BIN_DIR/openbnk"
 
