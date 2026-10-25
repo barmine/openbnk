@@ -35,6 +35,16 @@ const tool = (name: string, input: Record<string, unknown>) =>
     time: created,
   })
 
+const compaction = () =>
+  SessionMessage.CompactionCompleted.make({
+    id: SessionMessage.ID.make(`msg_compaction_${seq++}`),
+    type: "compaction",
+    status: "completed",
+    reason: "auto",
+    summary: "## Objective\n- fix it",
+    time: created,
+  })
+
 const synthetic = (metadata: Record<string, unknown>) =>
   SessionMessage.Synthetic.make({
     id: SessionMessage.ID.make(`msg_synthetic_${seq++}`),
@@ -67,6 +77,19 @@ describe("next speaker", () => {
     const capped = [...nudged, assistant([text("Next I'll run it.")]), synthetic({ nextSpeaker: true })]
     expect(NextSpeaker.decide([...nudged, assistant([text("Next I'll run it.")])]).type).toBe("ask")
     expect(NextSpeaker.decide([...capped, assistant([text("Next I'll run it.")])]).type).toBe("stop")
+  })
+
+  test("a completed compaction starts the turn when history loads from it", () => {
+    // After an automatic compaction, history starts at the checkpoint and holds no user message.
+    expect(NextSpeaker.decide([compaction(), assistant([])])).toEqual({ type: "continue" })
+    expect(NextSpeaker.decide([compaction(), assistant([text("Now I'll fix orders.py.")])])).toEqual({
+      type: "ask",
+      reply: "Now I'll fix orders.py.",
+    })
+    expect(NextSpeaker.decide([compaction(), assistant([text("Done?")])]).type).toBe("stop")
+    // A user message after the checkpoint is the newer boundary, so an earlier nudge no longer counts.
+    const nudged = [compaction(), assistant([text("Next I'll run it.")]), synthetic({ nextSpeaker: true })]
+    expect(NextSpeaker.decide([...nudged, user("x"), assistant([text("Next I'll run it.")])]).type).toBe("ask")
   })
 
   test("reads the side query's answer", () => {

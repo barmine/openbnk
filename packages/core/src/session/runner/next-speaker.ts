@@ -33,7 +33,12 @@ export type Decision =
 
 /** What to do when the model ends its turn, before any model call. */
 export function decide(messages: ReadonlyArray<SessionMessage.Info>): Decision {
-  const index = messages.findLastIndex((message) => message.type === "user")
+  // History loads from the latest completed compaction, so after an automatic one the turn may hold no
+  // user message: the checkpoint is the turn's start then. Without this, the first reply after a
+  // compaction could end the session silently, which DeepSeek's empty or announce-only replies often did.
+  const index = messages.findLastIndex(
+    (message) => message.type === "user" || (message.type === "compaction" && message.status === "completed"),
+  )
   if (index < 0) return { type: "stop" }
   const turn = messages.slice(index + 1)
   const last = turn.findLast((message) => message.type === "assistant")
