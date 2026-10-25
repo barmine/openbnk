@@ -79,6 +79,13 @@ describe("next speaker", () => {
     expect(NextSpeaker.decide([...capped, assistant([text("Next I'll run it.")])]).type).toBe("stop")
   })
 
+  test("a tool call resets the nudge cap, so long turns keep the guard", () => {
+    const nudge = [assistant([text("Next I'll run it.")]), synthetic({ nextSpeaker: true })]
+    const worked = [user("x"), ...nudge, ...nudge, assistant([tool("bash", { command: "ls" })])]
+    expect(NextSpeaker.decide([...worked, assistant([])]).type).toBe("continue")
+    expect(NextSpeaker.decide([...worked, ...nudge, ...nudge, assistant([])]).type).toBe("stop")
+  })
+
   test("a completed compaction starts the turn when history loads from it", () => {
     // After an automatic compaction, history starts at the checkpoint and holds no user message.
     expect(NextSpeaker.decide([compaction(), assistant([])])).toEqual({ type: "continue" })

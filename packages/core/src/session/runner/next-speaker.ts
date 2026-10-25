@@ -6,7 +6,7 @@ import { ModelProfilePlugin } from "../../plugin/model-profile.js"
 // Adapted from QwenLM/qwen-code's next-speaker check (Apache-2.0). When the model ends its turn with no tool
 // call, a short side query asks the same model whether its last reply finished, asked the user something, or
 // announced work it never started ("Now I'll fix X" and then stop). In the last case the session continues with
-// "Please continue." at most MAX_CONTINUES times per user turn. OPENBNK_PROFILE=0 or OPENBNK_NEXT_SPEAKER=0
+// "Please continue." at most MAX_CONTINUES times in a row without a tool call. OPENBNK_PROFILE=0 or OPENBNK_NEXT_SPEAKER=0
 // turns it off.
 
 export const MAX_CONTINUES = 2
@@ -43,7 +43,14 @@ export function decide(messages: ReadonlyArray<SessionMessage.Info>): Decision {
   const turn = messages.slice(index + 1)
   const last = turn.findLast((message) => message.type === "assistant")
   if (!last || last.error || READ_ONLY_AGENTS.has(last.agent)) return { type: "stop" }
-  const sent = turn.filter((message) => message.type === "synthetic" && message.metadata?.nextSpeaker === true).length
+  // The cap bounds nudges without progress, not per turn: a long task can need more than MAX_CONTINUES over an
+  // hour of work, so counting restarts after the model's last tool call.
+  const progress = turn.findLastIndex(
+    (message) => message.type === "assistant" && message.content.some((part) => part.type === "tool"),
+  )
+  const sent = turn
+    .slice(progress + 1)
+    .filter((message) => message.type === "synthetic" && message.metadata?.nextSpeaker === true).length
   if (sent >= MAX_CONTINUES) return { type: "stop" }
   const reply = last.content
     .flatMap((part) => (part.type === "text" ? [part.text] : []))
