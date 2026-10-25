@@ -242,7 +242,11 @@ const layer = Layer.effect(
           model: loaded.model,
           tools: loaded.tools,
           initial: loaded.initial,
-          messages: loaded.messages,
+          // Empty replies were retried with no message added (see NextSpeaker.emptyStreak), so they stay out of the request.
+          messages:
+            NextSpeaker.enabled() && ModelProfilePlugin.family([loaded.model.ref.id, loaded.model.model.id])
+              ? loaded.messages.filter((message) => !NextSpeaker.isEmpty(message))
+              : loaded.messages,
         })
         const prepared = yield* context.request.primary({
           session: loaded.session,
@@ -298,12 +302,21 @@ const layer = Layer.effect(
               return true
             }
             // Only for the model families the profile targets; other models are left as they are.
-            if (!NextSpeaker.enabled() || !ModelProfilePlugin.family([loaded.model.ref.id, loaded.model.model.id])) return false
+            if (!NextSpeaker.enabled() || !ModelProfilePlugin.family([loaded.model.ref.id, loaded.model.model.id]))
+              return false
             // Input the user already sent takes over the turn.
             if (yield* SessionInbox.nextPromotable(db, sessionID, "input")) return false
             const messages = yield* store.context(sessionID)
+            const empty = NextSpeaker.emptyStreak(messages)
+            if (empty > 0 && empty <= NextSpeaker.MAX_EMPTY_RETRIES) return true
             const last = messages.findLast((message) => message.type === "assistant")
-            const leaked = last?.type === "assistant" ? LeakedCall.find(last, loaded.tools.definitions.map((tool) => tool.name)) : []
+            const leaked =
+              last?.type === "assistant"
+                ? LeakedCall.find(
+                    last,
+                    loaded.tools.definitions.map((tool) => tool.name),
+                  )
+                : []
             const repeat = messages.at(-2)?.type === "synthetic" && messages.at(-2)?.metadata?.leakedCall === true
             if (leaked.length > 0 && !repeat) {
               yield* bus.publish(SessionEvent.Synthetic, {
@@ -316,7 +329,8 @@ const layer = Layer.effect(
             }
             const decision = NextSpeaker.decide(messages)
             const proceed =
-              decision.type === "continue" || (decision.type === "ask" && (yield* askNextSpeaker(loaded, decision.reply)))
+              decision.type === "continue" ||
+              (decision.type === "ask" && (yield* askNextSpeaker(loaded, decision.reply)))
             if (!proceed) return false
             yield* bus.publish(SessionEvent.Synthetic, {
               sessionID,

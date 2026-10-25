@@ -63,6 +63,22 @@ export function decide(messages: ReadonlyArray<SessionMessage.Info>): Decision {
   return { type: "ask", reply: reply.length > 6000 ? reply.slice(-6000) : reply }
 }
 
+// DeepSeek Harness treats an empty completion as a retryable error (EMPTY_RESPONSE). An empty reply here re-runs the
+// step with no message added, and is left out of later requests, up to MAX_EMPTY_RETRIES times in a row. After
+// that, decide() continues with CONTINUE as before.
+export const MAX_EMPTY_RETRIES = 3
+
+/** A completed reply with no text and no tool call. Its reasoning alone gives the user nothing to act on. */
+export const isEmpty = (message: SessionMessage.Info) =>
+  message.type === "assistant" &&
+  message.error === undefined &&
+  message.content.every((part) => part.type === "reasoning" || (part.type === "text" && part.text.trim() === ""))
+
+/** How many replies in a row, ending with the last message, came back empty. */
+export function emptyStreak(messages: ReadonlyArray<SessionMessage.Info>) {
+  return messages.length - 1 - messages.findLastIndex((message) => !isEmpty(message))
+}
+
 /** Reads the side query's answer. Anything unclear lets the session stop, as qwen-code does. */
 export function parse(text: string) {
   return text.match(/"next_speaker"\s*:\s*"(user|model)"/)?.[1] === "model"

@@ -86,6 +86,17 @@ describe("next speaker", () => {
     expect(NextSpeaker.decide([...worked, ...nudge, ...nudge, assistant([])]).type).toBe("stop")
   })
 
+  test("counts empty replies in a row, ignoring reasoning and blank text", () => {
+    const reasoning = SessionMessage.AssistantReasoning.make({ type: "reasoning", text: "Use write then run." })
+    const empty = assistant([reasoning, text("  ")])
+    expect(NextSpeaker.isEmpty(empty)).toBe(true)
+    expect(NextSpeaker.isEmpty(assistant([tool("bash", { command: "ls" })]))).toBe(false)
+    expect(NextSpeaker.emptyStreak([user("x"), assistant([text("ok")])])).toBe(0)
+    expect(NextSpeaker.emptyStreak([user("x"), empty, empty])).toBe(2)
+    // A message after the empty replies ends the streak.
+    expect(NextSpeaker.emptyStreak([user("x"), empty, synthetic({ nextSpeaker: true })])).toBe(0)
+  })
+
   test("a completed compaction starts the turn when history loads from it", () => {
     // After an automatic compaction, history starts at the checkpoint and holds no user message.
     expect(NextSpeaker.decide([compaction(), assistant([])])).toEqual({ type: "continue" })

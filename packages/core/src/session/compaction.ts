@@ -24,6 +24,7 @@ import { Bus } from "../bus.js"
 import { Database } from "../database/database.js"
 import { llmClient } from "../effect/app-node-platform.js"
 import { Model } from "../model.js"
+import { ModelProfilePlugin } from "../plugin/model-profile.js"
 import { State } from "../state.js"
 import { Token } from "../util/token.js"
 import type { SessionContext } from "./context.js"
@@ -99,6 +100,8 @@ const RESERVE_MIN = 16_000
  * the cache. Single steps grew by up to ~22k tokens at p99 in real sessions.
  */
 const RESERVE_SHARE = 0.15
+/** DeepSeek Harness keeps this share of the window verbatim after compaction; DeepSeek resumes better with more. */
+const DEEPSEEK_KEEP_SHARE = 0.16
 /** A common window size, assumed for the compaction request when the model's window is unknown. */
 const UNKNOWN_WINDOW = 200_000
 const IMAGE_TOKEN_ESTIMATE = 1_500
@@ -231,9 +234,8 @@ export const layer = Layer.effect(
         trigger.reason === "overflow" ? Math.min(cap, Math.floor(estimateContext(context) * SHRINK_STEPS[0])) : cap
 
       const selected = model === context.model ? trigger : { ...trigger, context: { ...context, model } }
-      const compaction = native
-        ? compactNatively(selected, budget, settings.keep)
-        : summarize(selected, budget, settings.keep)
+      const keep = keepFor(context.model, settings.keep)
+      const compaction = native ? compactNatively(selected, budget, keep) : summarize(selected, budget, keep)
       return yield* compaction.pipe(
         Effect.matchEffect({
           onSuccess: (result) => publish(selected, result),
@@ -927,4 +929,12 @@ const estimateMedia = (mime: string) => {
   if (type.startsWith("image/")) return IMAGE_TOKEN_ESTIMATE
   if (type === "application/pdf") return PDF_TOKEN_ESTIMATE
   return 0
+}
+
+/** The tokens of recent history kept beside the summary: the configured amount, or more for DeepSeek models. */
+const keepFor = (model: SessionContext.Loaded["model"], keep: number) => {
+  if (!ModelProfilePlugin.enabled() || ModelProfilePlugin.family([model.ref.id, model.model.id]) !== "deepseek")
+    return keep
+  const window = model.limit.input || model.limit.context
+  return Number.isFinite(window) ? Math.max(keep, Math.floor(window * DEEPSEEK_KEEP_SHARE)) : keep
 }
