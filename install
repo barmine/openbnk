@@ -61,14 +61,16 @@ say "installing dependencies"
 
 say "building openbnk (takes a minute or two)"
 out=$(mktemp -d)
-trap 'rm -rf "$out"' EXIT
+# Outside $out: build.ts deletes its outdir before building, which would take the log with it.
+log=$(mktemp)
+trap 'rm -rf "$out" "$log"' EXIT
 # Version is VERSION plus the commit, e.g. 0.1.0+6307a22. The channel stays the branch name, which
 # keeps the session database and background service the same as earlier builds of that branch.
 version="$(tr -d '[:space:]' <"$SRC/VERSION")+$(git -C "$SRC" rev-parse --short HEAD)"
 channel=$(git -C "$SRC" branch --show-current | sed 's/[^a-zA-Z0-9._-]/-/g')
 (cd "$SRC/packages/cli" && OPENBNK_VERSION=$version OPENBNK_CHANNEL=${channel:-detached} \
-  bun run script/build.ts --single --skip-install "--outdir=$out" >"$out/build.log" 2>&1) ||
-  { tail -n 40 "$out/build.log" >&2; die "build failed"; }
+  bun run script/build.ts --single --skip-install "--outdir=$out" >"$log" 2>&1) ||
+  { tail -n 40 "$log" >&2; die "build failed"; }
 binary=$(find "$out" -path '*/bin/openbnk' -type f | head -n 1)
 [ -n "$binary" ] || die "build finished but no binary was produced"
 
