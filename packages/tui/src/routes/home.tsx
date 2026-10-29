@@ -1,6 +1,7 @@
 import { Prompt, type PromptRef } from "../component/prompt"
 import { createEffect, createMemo, createSignal, onMount, Show, untrack } from "solid-js"
 import { Logo } from "../component/logo"
+import { Mascot } from "../component/mascot"
 import { useArgs } from "../context/args"
 import { useRouteData } from "../context/route"
 import { usePromptRef } from "../context/prompt"
@@ -90,10 +91,15 @@ export function Home() {
         <box height={3} minHeight={0} flexShrink={1} />
         <box
           flexShrink={0}
+          flexDirection="row"
+          gap={3}
           onSizeChange={function () {
             setLogoWidth(this.width)
           }}
         >
+          <Show when={dimensions().width >= 60 && dimensions().height >= 12}>
+            <Mascot />
+          </Show>
           <Logo />
         </box>
         <box height={1} flexShrink={0} />
